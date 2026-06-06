@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --text: #e8eaf6;
+      --muted: #8892b0;
+      --border: #2e3250;
+      --radius: 14px;
+      --card-size: 120px;
+      --gap: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top bar ── */
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    #clock {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: var(--accent);
+      min-width: 110px;
+    }
+
+    #search-bar {
+      flex: 1;
+      max-width: 500px;
+      display: flex;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      overflow: hidden;
+    }
+
+    #search-bar input {
+      flex: 1;
+      padding: 8px 16px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    #search-bar button {
+      padding: 8px 16px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    #topbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Grid label + grid size control ── */
+    #grid-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    #grid-controls label { font-weight: 600; }
+
+    #grid-size-input {
+      width: 50px;
+      padding: 4px 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    /* ── Bookmark grid ── */
+    #grid-wrapper {
+      flex: 1;
+      padding: var(--gap) 28px 40px;
+      overflow-y: auto;
+    }
+
+    #bookmarks {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 6), var(--card-size));
+      gap: var(--gap);
+      justify-content: start;
+    }
+
+    /* ── Bookmark card ── */
+    .bookmark-card {
+      position: relative;
+      width: var(--card-size);
+      height: var(--card-size);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+      overflow: hidden;
+      padding: 8px;
+    }
+
+    .bookmark-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(108,99,255,0.25);
+      border-color: var(--accent);
+    }
+
+    .bookmark-card img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .bookmark-card .favicon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+
+    .bookmark-card .name {
+      font-size: 0.72rem;
+      text-align: center;
+      line-height: 1.2;
+      word-break: break-word;
+      max-width: 100%;
+    }
+
+    /* Delete button */
+    .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent2);
+      border: none;
+      color: #fff;
+      font-size: 12px;
+      line-height: 20px;
+      text-align: center;
+      cursor: pointer;
+      display: none;
+      z-index: 2;
+    }
+
+    .bookmark-card:hover .delete-btn { display: block; }
+
+    /* Edit mode indicator */
+    body.edit-mode .bookmark-card {
+      animation: wiggle 0.4s ease infinite alternate;
+    }
+    @keyframes wiggle {
+      from { transform: rotate(-1deg); }
+      to   { transform: rotate(1deg); }
+    }
+    body.edit-mode .delete-btn { display: block !important; }
+
+    /* ── Modal ── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    #modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    #modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 380px;
+      max-width: 95vw;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #modal h2 { font-size: 1.1rem; color: var(--accent); }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+
+    .field input {
+      padding: 9px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: var(--accent); }
+
+    #img-preview-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #img-preview {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      object-fit: contain;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: none;
+    }
+
+    #img-preview.visible { display: block; }
+
+    #img-placeholder {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: var(--muted);
+    }
+
+    .img-options { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .img-options small { color: var(--muted); font-size: 0.75rem; }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div id="clock">00:00</div>
+
+  <div id="search-bar">
+    <input id="search-input" type="text" placeholder="Search Google…" />
+    <button onclick="doSearch()">&#128269;</button>
+  </div>
+
+  <div id="topbar-actions">
+    <button class="btn btn-primary" onclick="openAddModal()">+ Add</button>
+    <button class="btn btn-ghost" id="edit-btn" onclick="toggleEditMode()">Edit</button>
+  </div>
+</div>
+
+<!-- Grid size control -->
+<div id="grid-controls">
+  <label for="grid-size-input">Columns:</label>
+  <input id="grid-size-input" type="number" min="1" max="20" value="6" oninput="updateCols(this.value)" />
+  <span id="col-label">6 per row</span>
+</div>
+
+<!-- Bookmark grid -->
+<div id="grid-wrapper">
+  <div id="bookmarks"></div>
+</div>
+
+<!-- Add/Edit modal -->
+<div id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div id="modal">
+    <h2 id="modal-title">Add Bookmark</h2>
+
+    <div class="field">
+      <label>Name</label>
+      <input id="bm-name" type="text" placeholder="e.g. GitHub" />
+    </div>
+
+    <div class="field">
+      <label>URL</label>
+      <input id="bm-url" type="url" placeholder="https://example.com" oninput="autoFetchFavicon()" />
+    </div>
+
+    <div class="field">
+      <label>Logo / Image</label>
+      <div id="img-preview-wrap">
+        <div id="img-placeholder">🌐</div>
+        <img id="img-preview" alt="preview" />
+        <div class="img-options">
+          <input id="bm-img-url" type="url" placeholder="Paste image URL…" oninput="previewImgUrl(this.value)" />
+          <small>— or —</small>
+          <input id="bm-img-file" type="file" accept="image/*" onchange="previewImgFile(this)" />
+          <small style="color:var(--accent);cursor:pointer;" onclick="useFavicon()">Use site favicon automatically</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBookmark()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  /* ── State ── */
+  let bookmarks = JSON.parse(localStorage.getItem('bm_bookmarks') || '[]');
+  let cols = parseInt(localStorage.getItem('bm_cols') || '6', 10);
+  let editMode = false;
+  let editingIndex = -1;
+  let pendingImgDataUrl = null;
+
+  /* ── Clock ── */
+  function tick() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${h}:${m}`;
+  }
+  tick();
+  setInterval(tick, 10000);
+
+  /* ── Search ── */
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+  function doSearch() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) return;
+    window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
+  }
+
+  /* ── Grid cols ── */
+  function updateCols(v) {
+    v = Math.max(1, Math.min(20, parseInt(v) || 6));
+    cols = v;
+    localStorage.setItem('bm_cols', v);
+    document.getElementById('col-label').textContent = v + ' per row';
+    document.getElementById('bookmarks').style.setProperty('--cols', v);
+    document.getElementById('grid-size-input').value = v;
+  }
+  updateCols(cols);
+
+  /* ── Render ── */
+  function render() {
+    const grid = document.getElementById('bookmarks');
+    grid.innerHTML = '';
+    bookmarks.forEach((bm, i) => {
+      const a = document.createElement('a');
+      a.className = 'bookmark-card';
+      a.href = bm.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+
+      // Image / favicon
+      if (bm.img) {
+        const img = document.createElement('img');
+        img.src = bm.img;
+        img.alt = bm.name;
+        img.onerror = () => { img.replaceWith(makeEmoji(bm.name)); };
+        a.appendChild(img);
+      } else {
+        a.appendChild(makeEmoji(bm.name));
+      }
+
+      const span = document.createElement('span');
+      span.className = 'name';
+      span.textContent = bm.name;
+      a.appendChild(span);
+
+      // Delete btn
+      const del = document.createElement('button');
+      del.className = 'delete-btn';
+      del.textContent = '×';
+      del.title = 'Remove';
+      del.onclick = e => { e.preventDefault(); e.stopPropagation(); removeBookmark(i); };
+      a.appendChild(del);
+
+      // Edit on click in edit mode
+      a.addEventListener('click', e => {
+        if (editMode) { e.preventDefault(); openEditModal(i); }
+      });
+
+      grid.appendChild(a);
+    });
+    save();
+  }
+
+  function makeEmoji(name) {
+    const div = document.createElement('div');
+    div.className = 'favicon';
+    div.textContent = name ? name[0].toUpperCase() : '?';
+    return div;
+  }
+
+  function save() {
+    localStorage.setItem('bm_bookmarks', JSON.stringify(bookmarks));
+  }
+
+  /* ── Edit mode ── */
+  function toggleEditMode() {
+    editMode = !editMode;
+    document.body.classList.toggle('edit-mode', editMode);
+    document.getElementById('edit-btn').textContent = editMode ? 'Done' : 'Edit';
+  }
+
+  /* ── Remove ── */
+  function removeBookmark(i) {
+    bookmarks.splice(i, 1);
+    render();
+    toast('Bookmark removed');
+  }
+
+  /* ── Modal open/close ── */
+  function openAddModal() {
+    editingIndex = -1;
+    clearModal();
+    document.getElementById('modal-title').textContent = 'Add Bookmark';
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function openEditModal(i) {
+    editingIndex = i;
+    const bm = bookmarks[i];
+    document.getElementById('bm-name').value = bm.name || '';
+    document.getElementById('bm-url').value = bm.url || '';
+    document.getElementById('bm-img-url').value = '';
+    pendingImgDataUrl = null;
+    if (bm.img) {
+      showImgPreview(bm.img);
+    } else {
+      clearImgPreview();
+    }
+    document.getElementById('modal-title').textContent = 'Edit Bookmark';
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    clearModal();
+  }
+
+  function closeModalOnOverlay(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  function clearModal() {
+    document.getElementById('bm-name').value = '';
+    document.getElementById('bm-url').value = '';
+    document.getElementById('bm-img-url').value = '';
+    document.getElementById('bm-img-file').value = '';
+    pendingImgDataUrl = null;
+    clearImgPreview();
+  }
+
+  /* ── Image preview ── */
+  function showImgPreview(src) {
+    const preview = document.getElementById('img-preview');
+    const placeholder = document.getElementById('img-placeholder');
+    preview.src = src;
+    preview.classList.add('visible');
+    placeholder.style.display = 'none';
+  }
+
+  function clearImgPreview() {
+    const preview = document.getElementById('img-preview');
+    const placeholder = document.getElementById('img-placeholder');
+    preview.src = '';
+    preview.classList.remove('visible');
+    placeholder.style.display = 'flex';
+  }
+
+  function previewImgUrl(url) {
+    pendingImgDataUrl = null;
+    if (url) showImgPreview(url);
+    else clearImgPreview();
+  }
+
+  function previewImgFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      pendingImgDataUrl = e.target.result;
+      showImgPreview(pendingImgDataUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function autoFetchFavicon() {
+    // Only auto-fill if no image set yet
+    const urlInput = document.getElementById('bm-url').value.trim();
+    const imgUrlInput = document.getElementById('bm-img-url').value.trim();
+    if (!imgUrlInput && !pendingImgDataUrl && urlInput) {
+      try {
+        const origin = new URL(urlInput).origin;
+        showImgPreview(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(origin)}&sz=64`);
+      } catch(_) {}
+    }
+  }
+
+  function useFavicon() {
+    const url = document.getElementById('bm-url').value.trim();
+    if (!url) { toast('Enter a URL first'); return; }
+    try {
+      const origin = new URL(url).origin;
+      const fav = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(origin)}&sz=64`;
+      document.getElementById('bm-img-url').value = fav;
+      showImgPreview(fav);
+      pendingImgDataUrl = null;
+    } catch(_) { toast('Invalid URL'); }
+  }
+
+  /* ── Save bookmark ── */
+  function saveBookmark() {
+    const name = document.getElementById('bm-name').value.trim();
+    let url = document.getElementById('bm-url').value.trim();
+    const imgUrl = document.getElementById('bm-img-url').value.trim();
+
+    if (!name) { toast('Please enter a name'); return; }
+    if (!url) { toast('Please enter a URL'); return; }
+
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+    let img = pendingImgDataUrl || imgUrl || null;
+
+    // Fall back to favicon if no image given
+    if (!img) {
+      try {
+        const origin = new URL(url).origin;
+        img = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(origin)}&sz=64`;
+      } catch(_) {}
+    }
+
+    const bm = { name, url, img };
+
+    if (editingIndex >= 0) {
+      bookmarks[editingIndex] = bm;
+      toast('Bookmark updated');
+    } else {
+      bookmarks.push(bm);
+      toast('Bookmark added');
+    }
+
+    closeModal();
+    render();
+  }
+
+  /* ── Toast ── */
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  /* ── Init ── */
+  render();
+</script>
+</body>
+</html>
