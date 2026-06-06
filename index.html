@@ -596,14 +596,14 @@
 
 <script>
 /* ── State ── */
+const STORAGE_KEY = 'hp_home'; // permanent — never change this again
+const LEGACY_KEYS = ['hp_data4', 'hp_data3', 'hp_data2', 'hp_data'];
+
 let data = loadData();
 let editMode = false;
 let activeSection = data.sections[0]?.id || null;
 let editingBm = null;
 let pendingImgDataUrl = null;
-
-const STORAGE_KEY = 'hp_home'; // permanent — never change this again
-const LEGACY_KEYS = ['hp_data4', 'hp_data3', 'hp_data2', 'hp_data'];
 
 function loadData() {
   // Try the stable key first
