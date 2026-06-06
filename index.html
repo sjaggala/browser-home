@@ -336,7 +336,6 @@
       cursor: pointer;
       display: none; z-index: 2;
     }
-    .bookmark-card:hover .card-del-btn { display: block; }
     body.edit-mode .card-del-btn { display: block !important; }
     body.edit-mode .bookmark-card {
       animation: wiggle 0.35s ease infinite alternate;
@@ -703,7 +702,14 @@ function renderNav() {
         saveData();
         renderNav();
       });
-      inp.addEventListener('click', () => { activeSection = sec.id; renderNav(); renderGrid(); });
+      inp.addEventListener('click', () => {
+        if (activeSection !== sec.id) {
+          activeSection = sec.id;
+          renderNav();   // re-renders; new input gets focus naturally
+          renderGrid();
+        }
+        // if already active section, do nothing — let the cursor land in the input normally
+      });
 
       const delBtn = document.createElement('button');
       delBtn.className = 'section-tab-del';
