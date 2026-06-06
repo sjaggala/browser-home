@@ -425,6 +425,50 @@
     .setting-row input:focus { border-color: var(--accent); }
     .setting-row .hint { font-size: 0.72rem; color: var(--muted); }
 
+    /* ── Backup section in settings ── */
+    .settings-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+    .settings-section-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+    }
+    .backup-folder-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .backup-folder-name {
+      flex: 1;
+      font-size: 0.78rem;
+      color: var(--text);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .backup-folder-name.none { color: var(--muted); font-style: italic; }
+    .backup-status {
+      font-size: 0.72rem;
+      color: var(--muted);
+      min-height: 1rem;
+    }
+    .backup-status.ok   { color: #16a34a; }
+    .backup-status.err  { color: var(--accent2); }
+    .io-btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    .io-btn-row .btn { flex: 1; font-size: 0.78rem; padding: 7px 10px; }
+
     /* ── Bookmark modal ── */
     .modal-overlay {
       position: fixed; inset: 0;
@@ -542,16 +586,43 @@
 <div class="panel-overlay" id="settings-overlay" onclick="closeSettingsOnOverlay(event)">
   <div id="settings-panel">
     <h3>⚙ Settings</h3>
+
     <div class="setting-row">
       <label>Your name</label>
       <input id="set-username" type="text" placeholder="e.g. Alex" oninput="applySettings()" />
       <span class="hint">Shown in greeting: "Good morning, Alex"</span>
     </div>
+
     <div class="setting-row">
       <label>Grid columns</label>
       <input id="grid-size-input" type="number" min="1" max="20" value="6" oninput="updateCols(this.value)" />
       <span class="hint">Number of bookmark columns per row</span>
     </div>
+
+    <hr class="settings-divider" />
+    <span class="settings-section-label">Backup &amp; Restore</span>
+
+    <!-- Auto-backup folder -->
+    <div class="setting-row">
+      <label>Auto-backup folder</label>
+      <div class="backup-folder-row">
+        <span id="backup-folder-name" class="backup-folder-name none">No folder chosen</span>
+        <button class="btn btn-ghost" style="font-size:0.78rem;padding:5px 10px;white-space:nowrap" onclick="chooseBackupFolder()">Choose…</button>
+      </div>
+      <span id="backup-status" class="backup-status">Saves bookmarks.json automatically on every change</span>
+    </div>
+
+    <!-- Export / Import -->
+    <div class="setting-row">
+      <label>Export &amp; Import</label>
+      <div class="io-btn-row">
+        <button class="btn btn-ghost" onclick="exportBookmarks()">⬇ Export JSON</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">⬆ Import JSON</button>
+        <input id="import-file" type="file" accept=".json,application/json" style="display:none" onchange="importBookmarks(this)" />
+      </div>
+      <span class="hint">Export saves all bookmarks &amp; sections. Import merges or replaces.</span>
+    </div>
+
     <button class="btn btn-ghost" style="align-self:flex-end;margin-top:4px" onclick="closeSettings()">Close</button>
   </div>
 </div>
@@ -967,9 +1038,169 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 2200);
 }
 
+/* ═══════════════════════════════════════════
+   Backup — IndexedDB handle + File System API
+═══════════════════════════════════════════ */
+
+// Open (or create) the IndexedDB that stores the directory handle
+function openHandleDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('hp_backup', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+async function storeHandle(handle) {
+  const db = await openHandleDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(handle, 'backupDir');
+    tx.oncomplete = () => res();
+    tx.onerror = e => rej(e.target.error);
+  });
+}
+
+async function loadHandle() {
+  try {
+    const db = await openHandleDB();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('handles', 'readonly');
+      const req = tx.objectStore('handles').get('backupDir');
+      req.onsuccess = () => res(req.result || null);
+      req.onerror   = e => rej(e.target.error);
+    });
+  } catch(_) { return null; }
+}
+
+// Ask for (or re-confirm) write permission on the stored handle
+async function verifyPermission(handle) {
+  const opts = { mode: 'readwrite' };
+  if ((await handle.queryPermission(opts)) === 'granted') return true;
+  if ((await handle.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+
+// Write bookmarks.json into the chosen folder
+async function writeBackupFile(dirHandle) {
+  const fileName = 'bookmarks-backup.json';
+  const json = JSON.stringify({ exportedAt: new Date().toISOString(), ...data }, null, 2);
+  const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+  const writable  = await fileHandle.createWritable();
+  await writable.write(json);
+  await writable.close();
+}
+
+// Called on every saveData(); fires silently in background
+async function autoBackup() {
+  try {
+    const handle = await loadHandle();
+    if (!handle) return;
+    const ok = await verifyPermission(handle);
+    if (!ok) {
+      setBackupStatus('Permission denied — click Choose… to re-authorise', 'err');
+      return;
+    }
+    await writeBackupFile(handle);
+    const now = new Date();
+    setBackupStatus(`Last saved ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`, 'ok');
+  } catch(err) {
+    setBackupStatus('Auto-backup failed: ' + err.message, 'err');
+  }
+}
+
+function setBackupStatus(msg, type) {
+  const el = document.getElementById('backup-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'backup-status' + (type ? ' ' + type : '');
+}
+
+// User picks a folder
+async function chooseBackupFolder() {
+  if (!('showDirectoryPicker' in window)) {
+    toast('Your browser doesn\'t support folder picking (use Chrome/Edge)');
+    return;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await storeHandle(handle);
+    document.getElementById('backup-folder-name').textContent = handle.name;
+    document.getElementById('backup-folder-name').classList.remove('none');
+    await writeBackupFile(handle);
+    setBackupStatus('Folder set & backup saved ✓', 'ok');
+    toast('Auto-backup folder set: ' + handle.name);
+  } catch(err) {
+    if (err.name !== 'AbortError') toast('Could not set folder: ' + err.message);
+  }
+}
+
+// Restore stored folder name in settings UI (no permission needed just for name)
+async function restoreBackupFolderUI() {
+  try {
+    const handle = await loadHandle();
+    if (!handle) return;
+    const el = document.getElementById('backup-folder-name');
+    if (el) { el.textContent = handle.name; el.classList.remove('none'); }
+    setBackupStatus('Auto-backup active — saves on every change', 'ok');
+  } catch(_) {}
+}
+
+/* ── Export (always works) ── */
+function exportBookmarks() {
+  const json = JSON.stringify({ exportedAt: new Date().toISOString(), ...data }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `bookmarks-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Bookmarks exported');
+}
+
+/* ── Import ── */
+function importBookmarks(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!Array.isArray(parsed.sections)) throw new Error('Invalid format');
+      const action = confirm(
+        `Import "${file.name}"?\n\nThis will REPLACE your current bookmarks.\nCancel to keep current data.`
+      );
+      if (!action) { input.value = ''; return; }
+      data.sections = parsed.sections;
+      if (parsed.cols)      data.cols = parsed.cols;
+      if (parsed.username)  data.username = parsed.username;
+      activeSection = data.sections[0]?.id || null;
+      saveData();
+      updateCols(data.cols);
+      renderNav();
+      renderGrid();
+      tick();
+      toast('Bookmarks imported ✓');
+    } catch(err) {
+      toast('Import failed: ' + err.message);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
 /* ── Init ── */
+// Patch saveData to also trigger auto-backup on every call
+saveData = function() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  autoBackup(); // fire-and-forget; silent on error
+};
+
 renderNav();
 renderGrid();
+restoreBackupFolderUI();
 </script>
 </body>
 </html>
