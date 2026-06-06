@@ -6,17 +6,19 @@
   <title>Home</title>
   <style>
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --accent: #6c63ff;
-      --accent2: #ff6584;
-      --text: #e8eaf6;
-      --muted: #8892b0;
-      --border: #2e3250;
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --surface2: #f5f6fa;
+      --accent: #4f46e5;
+      --accent-light: #ede9fe;
+      --accent2: #ef4444;
+      --text: #1e1e2e;
+      --muted: #6b7280;
+      --border: #e2e4ea;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
       --radius: 14px;
-      --card-size: 120px;
-      --gap: 20px;
+      --card-size: 110px;
+      --gap: 18px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,107 +37,198 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 28px;
+      padding: 12px 24px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      gap: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
 
     #clock {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: 2px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 1px;
       color: var(--accent);
-      min-width: 110px;
+      min-width: 90px;
+    }
+
+    #topbar-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* ── Grid size control ── */
+    #grid-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    #grid-controls label { font-weight: 600; }
+    #grid-size-input {
+      width: 46px;
+      padding: 3px 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--border); }
+
+    /* ── Main layout: search up top-ish of center, sections below ── */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 24px 60px;
+      gap: 32px;
+      overflow-y: auto;
+    }
+
+    /* ── Search ── */
+    #search-wrap {
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #search-greeting {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
     }
 
     #search-bar {
-      flex: 1;
-      max-width: 500px;
+      width: 100%;
       display: flex;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 30px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 40px;
       overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #search-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
     }
 
-    #search-bar input {
+    #search-input {
       flex: 1;
-      padding: 8px 16px;
+      padding: 11px 20px;
       background: transparent;
       border: none;
       color: var(--text);
       font-size: 0.95rem;
       outline: none;
     }
+    #search-input::placeholder { color: var(--muted); }
 
-    #search-bar button {
-      padding: 8px 16px;
+    #search-btn {
+      padding: 10px 20px;
       background: var(--accent);
       border: none;
       color: #fff;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 1rem;
+      transition: background 0.15s;
     }
+    #search-btn:hover { background: #4338ca; }
 
-    #topbar-actions {
+    /* ── Sections container ── */
+    #sections-container {
+      width: 100%;
+      max-width: 900px;
       display: flex;
-      gap: 10px;
-      align-items: center;
+      flex-direction: column;
+      gap: 28px;
     }
 
-    .btn {
-      padding: 8px 16px;
-      border-radius: 8px;
+    /* ── Section ── */
+    .section-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .section-label-input {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: transparent;
       border: none;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      transition: opacity 0.2s;
+      border-bottom: 1.5px dashed var(--border);
+      outline: none;
+      padding: 2px 4px;
+      width: 120px;
     }
-    .btn:hover { opacity: 0.85; }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-ghost {
-      background: var(--surface2);
-      color: var(--muted);
-      border: 1px solid var(--border);
-    }
+    .section-label-input:focus { border-color: var(--accent); color: var(--accent); }
 
-    /* ── Grid label + grid size control ── */
-    #grid-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 28px 0;
-      color: var(--muted);
-      font-size: 0.82rem;
-    }
-
-    #grid-controls label { font-weight: 600; }
-
-    #grid-size-input {
-      width: 50px;
-      padding: 4px 8px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 0.85rem;
-      text-align: center;
-    }
-
-    /* ── Bookmark grid ── */
-    #grid-wrapper {
+    .section-line {
       flex: 1;
-      padding: var(--gap) 28px 40px;
-      overflow-y: auto;
+      height: 1px;
+      background: var(--border);
     }
 
-    #bookmarks {
-      display: grid;
-      grid-template-columns: repeat(var(--cols, 6), var(--card-size));
+    .section-del-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: none;
+    }
+    .section-del-btn:hover { color: var(--accent2); background: #fee2e2; }
+    body.edit-mode .section-del-btn { display: inline; }
+
+    /* ── Bookmark grid inside section ── */
+    .bm-grid {
+      display: flex;
+      flex-wrap: wrap;
       gap: var(--gap);
-      justify-content: start;
+      justify-content: center;
     }
 
     /* ── Bookmark card ── */
@@ -144,90 +237,140 @@
       width: var(--card-size);
       height: var(--card-size);
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 7px;
       cursor: pointer;
       text-decoration: none;
       color: var(--text);
       transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
-      overflow: hidden;
       padding: 8px;
+      box-shadow: var(--shadow);
     }
-
     .bookmark-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(108,99,255,0.25);
+      box-shadow: 0 8px 20px rgba(79,70,229,0.15);
       border-color: var(--accent);
     }
-
     .bookmark-card img {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       object-fit: contain;
       border-radius: 8px;
     }
-
-    .bookmark-card .favicon {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
-      background: var(--surface2);
+    .bookmark-card .letter-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--accent-light);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
+      font-weight: 700;
       color: var(--accent);
     }
-
     .bookmark-card .name {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
+      font-weight: 600;
       text-align: center;
       line-height: 1.2;
       word-break: break-word;
       max-width: 100%;
+      color: var(--muted);
     }
 
-    /* Delete button */
-    .delete-btn {
+    /* Delete btn on card */
+    .card-del-btn {
       position: absolute;
       top: 4px;
       right: 4px;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: var(--accent2);
       border: none;
       color: #fff;
-      font-size: 12px;
-      line-height: 20px;
+      font-size: 11px;
+      line-height: 18px;
       text-align: center;
       cursor: pointer;
       display: none;
       z-index: 2;
     }
+    .bookmark-card:hover .card-del-btn { display: block; }
+    body.edit-mode .card-del-btn { display: block !important; }
 
-    .bookmark-card:hover .delete-btn { display: block; }
-
-    /* Edit mode indicator */
+    /* Wiggle in edit mode */
     body.edit-mode .bookmark-card {
-      animation: wiggle 0.4s ease infinite alternate;
+      animation: wiggle 0.35s ease infinite alternate;
     }
     @keyframes wiggle {
-      from { transform: rotate(-1deg); }
-      to   { transform: rotate(1deg); }
+      from { transform: rotate(-1.2deg); }
+      to   { transform: rotate(1.2deg); }
     }
-    body.edit-mode .delete-btn { display: block !important; }
+    body.edit-mode .bookmark-card:hover { animation: none; }
 
-    /* ── Modal ── */
-    #modal-overlay {
+    /* ── Add placeholder card ── */
+    .add-card {
+      width: var(--card-size);
+      height: var(--card-size);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--muted);
+      background: transparent;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .add-card:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+    .add-card .plus {
+      font-size: 1.6rem;
+      line-height: 1;
+      font-weight: 300;
+    }
+
+    /* ── Add section button ── */
+    #add-section-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      padding: 10px 20px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.15s;
+      align-self: center;
+    }
+    #add-section-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* ── Modals ── */
+    .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -235,44 +378,43 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s;
+      backdrop-filter: blur(2px);
     }
-    #modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
 
-    #modal {
+    .modal {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 28px;
-      width: 380px;
+      width: 400px;
       max-width: 95vw;
       display: flex;
       flex-direction: column;
       gap: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
+    .modal h2 { font-size: 1.05rem; color: var(--accent); font-weight: 700; }
 
-    #modal h2 { font-size: 1.1rem; color: var(--accent); }
-
-    .field { display: flex; flex-direction: column; gap: 6px; }
-    .field label { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
-
-    .field input {
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.78rem; color: var(--muted); font-weight: 700; letter-spacing: 0.3px; }
+    .field input, .field select {
       padding: 9px 12px;
       background: var(--surface2);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: 8px;
       color: var(--text);
       font-size: 0.9rem;
       outline: none;
       transition: border-color 0.15s;
     }
-    .field input:focus { border-color: var(--accent); }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
 
     #img-preview-wrap {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
     }
-
     #img-preview {
       width: 52px;
       height: 52px;
@@ -281,44 +423,53 @@
       background: var(--surface2);
       border: 1px solid var(--border);
       display: none;
+      flex-shrink: 0;
     }
-
     #img-preview.visible { display: block; }
-
     #img-placeholder {
       width: 52px;
       height: 52px;
       border-radius: 10px;
       background: var(--surface2);
-      border: 1px dashed var(--border);
+      border: 1.5px dashed var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       color: var(--muted);
+      flex-shrink: 0;
     }
-
-    .img-options { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-    .img-options small { color: var(--muted); font-size: 0.75rem; }
+    .img-options { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .img-options small { color: var(--muted); font-size: 0.73rem; }
+    .favicon-link {
+      font-size: 0.73rem;
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .favicon-link:hover { text-decoration: underline; }
 
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #4338ca; }
 
     /* ── Toast ── */
     #toast {
       position: fixed;
       bottom: 28px;
       left: 50%;
-      transform: translateX(-50%) translateY(20px);
+      transform: translateX(-50%) translateY(16px);
       background: var(--accent);
       color: #fff;
-      padding: 10px 22px;
+      padding: 9px 20px;
       border-radius: 30px;
-      font-size: 0.85rem;
+      font-size: 0.83rem;
       font-weight: 600;
       opacity: 0;
-      transition: opacity 0.3s, transform 0.3s;
+      transition: opacity 0.25s, transform 0.25s;
       pointer-events: none;
       z-index: 200;
+      box-shadow: 0 4px 16px rgba(79,70,229,0.3);
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
@@ -328,45 +479,52 @@
 <!-- Top bar -->
 <div id="topbar">
   <div id="clock">00:00</div>
-
-  <div id="search-bar">
-    <input id="search-input" type="text" placeholder="Search Google…" />
-    <button onclick="doSearch()">&#128269;</button>
-  </div>
-
-  <div id="topbar-actions">
-    <button class="btn btn-primary" onclick="openAddModal()">+ Add</button>
+  <div id="topbar-right">
+    <div id="grid-controls">
+      <label for="grid-size-input">Cols:</label>
+      <input id="grid-size-input" type="number" min="1" max="20" value="6" oninput="updateCols(this.value)" />
+    </div>
     <button class="btn btn-ghost" id="edit-btn" onclick="toggleEditMode()">Edit</button>
   </div>
 </div>
 
-<!-- Grid size control -->
-<div id="grid-controls">
-  <label for="grid-size-input">Columns:</label>
-  <input id="grid-size-input" type="number" min="1" max="20" value="6" oninput="updateCols(this.value)" />
-  <span id="col-label">6 per row</span>
+<!-- Main content -->
+<div id="main">
+
+  <!-- Search centered, slightly above mid -->
+  <div id="search-wrap">
+    <div id="search-greeting"></div>
+    <div id="search-bar">
+      <input id="search-input" type="text" placeholder="Search Google…" autocomplete="off" />
+      <button id="search-btn" onclick="doSearch()">&#128269;</button>
+    </div>
+  </div>
+
+  <!-- Sections -->
+  <div id="sections-container"></div>
+
+  <!-- Add section -->
+  <button id="add-section-btn" onclick="addSection()">＋ New Section</button>
+
 </div>
 
-<!-- Bookmark grid -->
-<div id="grid-wrapper">
-  <div id="bookmarks"></div>
-</div>
-
-<!-- Add/Edit modal -->
-<div id="modal-overlay" onclick="closeModalOnOverlay(event)">
-  <div id="modal">
-    <h2 id="modal-title">Add Bookmark</h2>
+<!-- Bookmark modal -->
+<div class="modal-overlay" id="bm-modal-overlay" onclick="closeModalOnOverlay(event,'bm-modal-overlay')">
+  <div class="modal">
+    <h2 id="bm-modal-title">Add Bookmark</h2>
 
     <div class="field">
       <label>Name</label>
       <input id="bm-name" type="text" placeholder="e.g. GitHub" />
     </div>
-
     <div class="field">
       <label>URL</label>
       <input id="bm-url" type="url" placeholder="https://example.com" oninput="autoFetchFavicon()" />
     </div>
-
+    <div class="field">
+      <label>Section</label>
+      <select id="bm-section"></select>
+    </div>
     <div class="field">
       <label>Logo / Image</label>
       <div id="img-preview-wrap">
@@ -374,15 +532,15 @@
         <img id="img-preview" alt="preview" />
         <div class="img-options">
           <input id="bm-img-url" type="url" placeholder="Paste image URL…" oninput="previewImgUrl(this.value)" />
-          <small>— or —</small>
+          <small>— or upload —</small>
           <input id="bm-img-file" type="file" accept="image/*" onchange="previewImgFile(this)" />
-          <small style="color:var(--accent);cursor:pointer;" onclick="useFavicon()">Use site favicon automatically</small>
+          <span class="favicon-link" onclick="useFavicon()">↻ Use site favicon</span>
         </div>
       </div>
     </div>
 
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-ghost" onclick="closeBmModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveBookmark()">Save</button>
     </div>
   </div>
@@ -392,259 +550,369 @@
 <div id="toast"></div>
 
 <script>
-  /* ── State ── */
-  let bookmarks = JSON.parse(localStorage.getItem('bm_bookmarks') || '[]');
-  let cols = parseInt(localStorage.getItem('bm_cols') || '6', 10);
-  let editMode = false;
-  let editingIndex = -1;
-  let pendingImgDataUrl = null;
+/* ═══════════════════════════════════════
+   State
+═══════════════════════════════════════ */
+let data = load();
+// data = { sections: [{ id, name, bookmarks: [{name,url,img}] }], cols }
+let editMode = false;
+let editingBm = null;     // {sectionId, bmIndex} or null
+let addingToSection = null; // sectionId
+let pendingImgDataUrl = null;
 
-  /* ── Clock ── */
-  function tick() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2,'0');
-    const m = String(now.getMinutes()).padStart(2,'0');
-    document.getElementById('clock').textContent = `${h}:${m}`;
-  }
-  tick();
-  setInterval(tick, 10000);
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('hp_data2') || 'null');
+    if (d && Array.isArray(d.sections)) return d;
+  } catch(_) {}
+  return { sections: [{ id: uid(), name: 'General', bookmarks: [] }], cols: 6 };
+}
 
-  /* ── Search ── */
-  document.getElementById('search-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doSearch();
-  });
-  function doSearch() {
-    const q = document.getElementById('search-input').value.trim();
-    if (!q) return;
-    window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
-  }
+function save() {
+  localStorage.setItem('hp_data2', JSON.stringify(data));
+}
 
-  /* ── Grid cols ── */
-  function updateCols(v) {
-    v = Math.max(1, Math.min(20, parseInt(v) || 6));
-    cols = v;
-    localStorage.setItem('bm_cols', v);
-    document.getElementById('col-label').textContent = v + ' per row';
-    document.getElementById('bookmarks').style.setProperty('--cols', v);
-    document.getElementById('grid-size-input').value = v;
-  }
-  updateCols(cols);
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
 
-  /* ── Render ── */
-  function render() {
-    const grid = document.getElementById('bookmarks');
-    grid.innerHTML = '';
-    bookmarks.forEach((bm, i) => {
-      const a = document.createElement('a');
-      a.className = 'bookmark-card';
-      a.href = bm.url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
+/* ═══════════════════════════════════════
+   Clock & Greeting
+═══════════════════════════════════════ */
+function tick() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+  const hr = now.getHours();
+  const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('search-greeting').textContent = greet;
+}
+tick();
+setInterval(tick, 15000);
 
-      // Image / favicon
-      if (bm.img) {
-        const img = document.createElement('img');
-        img.src = bm.img;
-        img.alt = bm.name;
-        img.onerror = () => { img.replaceWith(makeEmoji(bm.name)); };
-        a.appendChild(img);
-      } else {
-        a.appendChild(makeEmoji(bm.name));
-      }
+/* ═══════════════════════════════════════
+   Search
+═══════════════════════════════════════ */
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
+}
 
-      const span = document.createElement('span');
-      span.className = 'name';
-      span.textContent = bm.name;
-      a.appendChild(span);
+/* ═══════════════════════════════════════
+   Grid cols
+═══════════════════════════════════════ */
+function updateCols(v) {
+  v = Math.max(1, Math.min(20, parseInt(v) || 6));
+  data.cols = v;
+  document.getElementById('grid-size-input').value = v;
+  document.documentElement.style.setProperty('--card-size',
+    v >= 10 ? '90px' : v >= 7 ? '100px' : '110px');
+  save();
+}
+updateCols(data.cols);
 
-      // Delete btn
-      const del = document.createElement('button');
-      del.className = 'delete-btn';
-      del.textContent = '×';
-      del.title = 'Remove';
-      del.onclick = e => { e.preventDefault(); e.stopPropagation(); removeBookmark(i); };
-      a.appendChild(del);
+/* ═══════════════════════════════════════
+   Edit mode
+═══════════════════════════════════════ */
+function toggleEditMode() {
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  document.getElementById('edit-btn').textContent = editMode ? 'Done' : 'Edit';
+}
 
-      // Edit on click in edit mode
-      a.addEventListener('click', e => {
-        if (editMode) { e.preventDefault(); openEditModal(i); }
-      });
+/* ═══════════════════════════════════════
+   Render
+═══════════════════════════════════════ */
+function render() {
+  const container = document.getElementById('sections-container');
+  container.innerHTML = '';
 
-      grid.appendChild(a);
+  data.sections.forEach(section => {
+    const block = document.createElement('div');
+    block.className = 'section-block';
+    block.dataset.id = section.id;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'section-header';
+
+    const labelInput = document.createElement('input');
+    labelInput.className = 'section-label-input';
+    labelInput.value = section.name;
+    labelInput.title = 'Click to rename section';
+    labelInput.addEventListener('change', () => {
+      section.name = labelInput.value.trim() || 'Untitled';
+      labelInput.value = section.name;
+      save();
     });
-    save();
+    // Prevent click from triggering other things
+    labelInput.addEventListener('click', e => e.stopPropagation());
+
+    const line = document.createElement('div');
+    line.className = 'section-line';
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'section-del-btn';
+    delBtn.textContent = '✕ Remove section';
+    delBtn.title = 'Delete this section and its bookmarks';
+    delBtn.onclick = () => deleteSection(section.id);
+
+    header.appendChild(labelInput);
+    header.appendChild(line);
+    header.appendChild(delBtn);
+    block.appendChild(header);
+
+    // Grid
+    const grid = document.createElement('div');
+    grid.className = 'bm-grid';
+
+    section.bookmarks.forEach((bm, i) => {
+      grid.appendChild(makeCard(bm, i, section.id));
+    });
+
+    // Add placeholder card
+    const addCard = document.createElement('div');
+    addCard.className = 'add-card';
+    addCard.title = 'Add bookmark to ' + section.name;
+    addCard.onclick = () => openAddBmModal(section.id);
+    addCard.innerHTML = `<span class="plus">+</span><span>Add</span>`;
+    grid.appendChild(addCard);
+
+    block.appendChild(grid);
+    container.appendChild(block);
+  });
+
+  save();
+}
+
+function makeCard(bm, i, sectionId) {
+  const a = document.createElement('a');
+  a.className = 'bookmark-card';
+  a.href = bm.url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+
+  if (bm.img) {
+    const img = document.createElement('img');
+    img.src = bm.img;
+    img.alt = bm.name;
+    img.onerror = () => img.replaceWith(letterIcon(bm.name));
+    a.appendChild(img);
+  } else {
+    a.appendChild(letterIcon(bm.name));
   }
 
-  function makeEmoji(name) {
-    const div = document.createElement('div');
-    div.className = 'favicon';
-    div.textContent = name ? name[0].toUpperCase() : '?';
-    return div;
-  }
+  const span = document.createElement('span');
+  span.className = 'name';
+  span.textContent = bm.name;
+  a.appendChild(span);
 
-  function save() {
-    localStorage.setItem('bm_bookmarks', JSON.stringify(bookmarks));
-  }
+  const del = document.createElement('button');
+  del.className = 'card-del-btn';
+  del.textContent = '×';
+  del.title = 'Remove';
+  del.onclick = e => { e.preventDefault(); e.stopPropagation(); deleteBm(sectionId, i); };
+  a.appendChild(del);
 
-  /* ── Edit mode ── */
-  function toggleEditMode() {
-    editMode = !editMode;
-    document.body.classList.toggle('edit-mode', editMode);
-    document.getElementById('edit-btn').textContent = editMode ? 'Done' : 'Edit';
-  }
+  a.addEventListener('click', e => {
+    if (editMode) { e.preventDefault(); openEditBmModal(sectionId, i); }
+  });
 
-  /* ── Remove ── */
-  function removeBookmark(i) {
-    bookmarks.splice(i, 1);
-    render();
-    toast('Bookmark removed');
-  }
+  return a;
+}
 
-  /* ── Modal open/close ── */
-  function openAddModal() {
-    editingIndex = -1;
-    clearModal();
-    document.getElementById('modal-title').textContent = 'Add Bookmark';
-    document.getElementById('modal-overlay').classList.add('open');
-  }
+function letterIcon(name) {
+  const div = document.createElement('div');
+  div.className = 'letter-icon';
+  div.textContent = name ? name[0].toUpperCase() : '?';
+  return div;
+}
 
-  function openEditModal(i) {
-    editingIndex = i;
-    const bm = bookmarks[i];
-    document.getElementById('bm-name').value = bm.name || '';
-    document.getElementById('bm-url').value = bm.url || '';
-    document.getElementById('bm-img-url').value = '';
-    pendingImgDataUrl = null;
-    if (bm.img) {
-      showImgPreview(bm.img);
-    } else {
-      clearImgPreview();
-    }
-    document.getElementById('modal-title').textContent = 'Edit Bookmark';
-    document.getElementById('modal-overlay').classList.add('open');
-  }
-
-  function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('open');
-    clearModal();
-  }
-
-  function closeModalOnOverlay(e) {
-    if (e.target === document.getElementById('modal-overlay')) closeModal();
-  }
-
-  function clearModal() {
-    document.getElementById('bm-name').value = '';
-    document.getElementById('bm-url').value = '';
-    document.getElementById('bm-img-url').value = '';
-    document.getElementById('bm-img-file').value = '';
-    pendingImgDataUrl = null;
-    clearImgPreview();
-  }
-
-  /* ── Image preview ── */
-  function showImgPreview(src) {
-    const preview = document.getElementById('img-preview');
-    const placeholder = document.getElementById('img-placeholder');
-    preview.src = src;
-    preview.classList.add('visible');
-    placeholder.style.display = 'none';
-  }
-
-  function clearImgPreview() {
-    const preview = document.getElementById('img-preview');
-    const placeholder = document.getElementById('img-placeholder');
-    preview.src = '';
-    preview.classList.remove('visible');
-    placeholder.style.display = 'flex';
-  }
-
-  function previewImgUrl(url) {
-    pendingImgDataUrl = null;
-    if (url) showImgPreview(url);
-    else clearImgPreview();
-  }
-
-  function previewImgFile(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      pendingImgDataUrl = e.target.result;
-      showImgPreview(pendingImgDataUrl);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function autoFetchFavicon() {
-    // Only auto-fill if no image set yet
-    const urlInput = document.getElementById('bm-url').value.trim();
-    const imgUrlInput = document.getElementById('bm-img-url').value.trim();
-    if (!imgUrlInput && !pendingImgDataUrl && urlInput) {
-      try {
-        const origin = new URL(urlInput).origin;
-        showImgPreview(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(origin)}&sz=64`);
-      } catch(_) {}
-    }
-  }
-
-  function useFavicon() {
-    const url = document.getElementById('bm-url').value.trim();
-    if (!url) { toast('Enter a URL first'); return; }
-    try {
-      const origin = new URL(url).origin;
-      const fav = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(origin)}&sz=64`;
-      document.getElementById('bm-img-url').value = fav;
-      showImgPreview(fav);
-      pendingImgDataUrl = null;
-    } catch(_) { toast('Invalid URL'); }
-  }
-
-  /* ── Save bookmark ── */
-  function saveBookmark() {
-    const name = document.getElementById('bm-name').value.trim();
-    let url = document.getElementById('bm-url').value.trim();
-    const imgUrl = document.getElementById('bm-img-url').value.trim();
-
-    if (!name) { toast('Please enter a name'); return; }
-    if (!url) { toast('Please enter a URL'); return; }
-
-    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-
-    let img = pendingImgDataUrl || imgUrl || null;
-
-    // Fall back to favicon if no image given
-    if (!img) {
-      try {
-        const origin = new URL(url).origin;
-        img = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(origin)}&sz=64`;
-      } catch(_) {}
-    }
-
-    const bm = { name, url, img };
-
-    if (editingIndex >= 0) {
-      bookmarks[editingIndex] = bm;
-      toast('Bookmark updated');
-    } else {
-      bookmarks.push(bm);
-      toast('Bookmark added');
-    }
-
-    closeModal();
-    render();
-  }
-
-  /* ── Toast ── */
-  function toast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2200);
-  }
-
-  /* ── Init ── */
+/* ═══════════════════════════════════════
+   Sections
+═══════════════════════════════════════ */
+function addSection() {
+  data.sections.push({ id: uid(), name: 'New Section', bookmarks: [] });
   render();
+  toast('Section added — click the label to rename it');
+}
+
+function deleteSection(id) {
+  const sec = data.sections.find(s => s.id === id);
+  if (!sec) return;
+  if (sec.bookmarks.length > 0) {
+    if (!confirm(`Delete section "${sec.name}" and its ${sec.bookmarks.length} bookmark(s)?`)) return;
+  }
+  data.sections = data.sections.filter(s => s.id !== id);
+  render();
+  toast('Section removed');
+}
+
+/* ═══════════════════════════════════════
+   Bookmark CRUD
+═══════════════════════════════════════ */
+function deleteBm(sectionId, i) {
+  const sec = data.sections.find(s => s.id === sectionId);
+  if (!sec) return;
+  sec.bookmarks.splice(i, 1);
+  render();
+  toast('Bookmark removed');
+}
+
+function openAddBmModal(sectionId) {
+  editingBm = null;
+  addingToSection = sectionId;
+  clearBmModal();
+  document.getElementById('bm-modal-title').textContent = 'Add Bookmark';
+  populateSectionSelect(sectionId);
+  document.getElementById('bm-modal-overlay').classList.add('open');
+}
+
+function openEditBmModal(sectionId, i) {
+  const sec = data.sections.find(s => s.id === sectionId);
+  if (!sec) return;
+  const bm = sec.bookmarks[i];
+  editingBm = { sectionId, bmIndex: i };
+  addingToSection = sectionId;
+  document.getElementById('bm-name').value = bm.name || '';
+  document.getElementById('bm-url').value = bm.url || '';
+  document.getElementById('bm-img-url').value = '';
+  pendingImgDataUrl = null;
+  if (bm.img) showImgPreview(bm.img); else clearImgPreview();
+  document.getElementById('bm-modal-title').textContent = 'Edit Bookmark';
+  populateSectionSelect(sectionId);
+  document.getElementById('bm-modal-overlay').classList.add('open');
+}
+
+function populateSectionSelect(selectedId) {
+  const sel = document.getElementById('bm-section');
+  sel.innerHTML = '';
+  data.sections.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name;
+    if (s.id === selectedId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function closeBmModal() {
+  document.getElementById('bm-modal-overlay').classList.remove('open');
+  clearBmModal();
+}
+
+function closeModalOnOverlay(e, id) {
+  if (e.target === document.getElementById(id)) {
+    document.getElementById(id).classList.remove('open');
+    clearBmModal();
+  }
+}
+
+function clearBmModal() {
+  document.getElementById('bm-name').value = '';
+  document.getElementById('bm-url').value = '';
+  document.getElementById('bm-img-url').value = '';
+  document.getElementById('bm-img-file').value = '';
+  pendingImgDataUrl = null;
+  clearImgPreview();
+}
+
+function saveBookmark() {
+  const name = document.getElementById('bm-name').value.trim();
+  let url = document.getElementById('bm-url').value.trim();
+  const imgUrl = document.getElementById('bm-img-url').value.trim();
+  const targetSectionId = document.getElementById('bm-section').value;
+
+  if (!name) { toast('Please enter a name'); return; }
+  if (!url)  { toast('Please enter a URL');  return; }
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+  let img = pendingImgDataUrl || imgUrl || null;
+  if (!img) {
+    try {
+      img = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`;
+    } catch(_) {}
+  }
+
+  const bm = { name, url, img };
+
+  if (editingBm) {
+    const oldSec = data.sections.find(s => s.id === editingBm.sectionId);
+    if (oldSec) oldSec.bookmarks.splice(editingBm.bmIndex, 1);
+    const newSec = data.sections.find(s => s.id === targetSectionId);
+    if (newSec) newSec.bookmarks.push(bm);
+    toast('Bookmark updated');
+  } else {
+    const sec = data.sections.find(s => s.id === targetSectionId);
+    if (sec) sec.bookmarks.push(bm);
+    toast('Bookmark added');
+  }
+
+  closeBmModal();
+  render();
+}
+
+/* ═══════════════════════════════════════
+   Image preview
+═══════════════════════════════════════ */
+function showImgPreview(src) {
+  document.getElementById('img-preview').src = src;
+  document.getElementById('img-preview').classList.add('visible');
+  document.getElementById('img-placeholder').style.display = 'none';
+}
+function clearImgPreview() {
+  document.getElementById('img-preview').src = '';
+  document.getElementById('img-preview').classList.remove('visible');
+  document.getElementById('img-placeholder').style.display = 'flex';
+}
+function previewImgUrl(url) {
+  pendingImgDataUrl = null;
+  if (url) showImgPreview(url); else clearImgPreview();
+}
+function previewImgFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { pendingImgDataUrl = e.target.result; showImgPreview(pendingImgDataUrl); };
+  reader.readAsDataURL(file);
+}
+function autoFetchFavicon() {
+  const url = document.getElementById('bm-url').value.trim();
+  const imgUrl = document.getElementById('bm-img-url').value.trim();
+  if (!imgUrl && !pendingImgDataUrl && url) {
+    try { showImgPreview(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`); } catch(_) {}
+  }
+}
+function useFavicon() {
+  const url = document.getElementById('bm-url').value.trim();
+  if (!url) { toast('Enter a URL first'); return; }
+  try {
+    const fav = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`;
+    document.getElementById('bm-img-url').value = fav;
+    showImgPreview(fav);
+    pendingImgDataUrl = null;
+  } catch(_) { toast('Invalid URL'); }
+}
+
+/* ═══════════════════════════════════════
+   Toast
+═══════════════════════════════════════ */
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ═══════════════════════════════════════
+   Init
+═══════════════════════════════════════ */
+render();
 </script>
 </body>
 </html>
