@@ -13,9 +13,9 @@
       --accent-light: #ede9fe;
       --accent2: #ef4444;
       --text: #1e1e2e;
-      --muted: #6b7280;
+      --muted: #9ca3af;
       --border: #e2e4ea;
-      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
       --radius: 14px;
       --card-size: 110px;
       --gap: 18px;
@@ -27,58 +27,42 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     /* ── Top bar ── */
     #topbar {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 24px;
+      padding: 11px 24px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     }
 
     #clock {
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 600;
       color: var(--muted);
-      letter-spacing: 0.2px;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
     }
     #clock .time-main {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--accent);
     }
 
-    #topbar-right {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .icon-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--muted);
-      font-size: 1rem;
-      transition: all 0.15s;
-    }
-    .icon-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+    #topbar-right { display: flex; gap: 8px; align-items: center; }
 
     .btn {
-      padding: 7px 14px;
+      padding: 6px 14px;
       border-radius: 8px;
       border: none;
       cursor: pointer;
@@ -86,27 +70,48 @@
       font-weight: 600;
       transition: all 0.15s;
     }
-    .btn:hover { opacity: 0.85; }
     .btn-ghost {
       background: var(--surface2);
       color: var(--muted);
       border: 1px solid var(--border);
     }
-    .btn-ghost:hover { background: var(--border); }
+    .btn-ghost:hover { background: var(--border); color: var(--text); }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { background: #4338ca; }
-    .btn-danger { background: #fee2e2; color: var(--accent2); border: 1px solid #fecaca; }
-    .btn-danger:hover { background: #fecaca; }
 
-    /* ── Main layout ── */
-    #main {
+    .icon-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 1rem;
+      transition: all 0.15s;
+    }
+    .icon-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+
+    /* ── Center stage ── */
+    /* Uses a flex column that is itself centered in the remaining vertical space */
+    #stage {
       flex: 1;
+      display: flex;
+      align-items: center;        /* vertical center */
+      justify-content: center;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    #stage-inner {
+      width: 100%;
+      max-width: 700px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 44px 24px 60px;
-      gap: 24px;
-      overflow-y: auto;
+      gap: 28px;
+      /* Shift slightly above true center for visual comfort */
+      margin-bottom: 5vh;
     }
 
     /* ── Search ── */
@@ -120,7 +125,7 @@
     }
 
     #search-greeting {
-      font-size: 1.6rem;
+      font-size: 1.55rem;
       font-weight: 700;
       color: var(--text);
       letter-spacing: -0.3px;
@@ -133,9 +138,9 @@
       background: var(--surface);
       border: 1.5px solid var(--border);
       border-radius: 40px;
-      overflow: hidden;
       box-shadow: var(--shadow);
       transition: border-color 0.2s, box-shadow 0.2s;
+      overflow: hidden;
     }
     #search-bar:focus-within {
       border-color: var(--accent);
@@ -159,90 +164,109 @@
       border: none;
       color: var(--muted);
       cursor: pointer;
-      font-size: 1.1rem;
+      font-size: 1rem;
       transition: color 0.15s;
       display: flex;
       align-items: center;
     }
     #search-btn:hover { color: var(--accent); }
 
-    /* ── Section nav bar ── */
-    #section-nav-wrap {
-      width: 100%;
-      max-width: 700px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0;
-    }
-
+    /* ── Section nav — plain text labels ── */
     #section-nav {
       display: flex;
       align-items: center;
-      gap: 4px;
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 40px;
-      padding: 4px 6px;
-      box-shadow: var(--shadow);
+      gap: 6px;
       flex-wrap: wrap;
       justify-content: center;
     }
 
     .section-tab {
-      padding: 6px 18px;
-      border-radius: 30px;
+      background: none;
       border: none;
-      background: transparent;
-      color: var(--muted);
+      padding: 4px 10px;
       font-size: 0.82rem;
       font-weight: 600;
+      color: var(--muted);
       cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
+      border-radius: 6px;
+      transition: color 0.15s;
+      letter-spacing: 0.2px;
+      position: relative;
     }
-    .section-tab:hover { background: var(--surface2); color: var(--text); }
+    .section-tab:hover { color: var(--text); }
     .section-tab.active {
+      color: var(--text);
+      font-weight: 700;
+    }
+    /* underline indicator for active */
+    .section-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 10px;
+      right: 10px;
+      height: 2px;
       background: var(--accent);
-      color: #fff;
+      border-radius: 2px;
     }
 
-    /* Inline rename in edit mode */
+    /* Edit-mode inline rename */
+    .section-tab-edit-wrap {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
     .section-tab-input {
-      padding: 4px 10px;
-      border-radius: 30px;
-      border: 1.5px dashed var(--accent);
-      background: var(--accent-light);
-      color: var(--accent);
       font-size: 0.82rem;
       font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: 1.5px solid var(--accent);
+      border-radius: 6px;
+      padding: 3px 8px;
       outline: none;
-      width: 110px;
+      width: 100px;
+    }
+    .section-tab-del {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent2);
+      border: none;
+      color: #fff;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* separator dot between tabs */
+    .tab-dot {
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
     }
 
     .add-section-tab {
-      padding: 6px 12px;
-      border-radius: 30px;
+      background: none;
       border: 1.5px dashed var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.82rem;
+      padding: 3px 10px;
+      font-size: 0.78rem;
       font-weight: 600;
+      color: var(--muted);
       cursor: pointer;
+      border-radius: 6px;
       transition: all 0.15s;
-      white-space: nowrap;
     }
     .add-section-tab:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
     /* ── Bookmark grid ── */
     #bm-area {
       width: 100%;
-      max-width: 860px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      min-height: 160px;
+      gap: 14px;
     }
 
     #bm-grid {
@@ -274,25 +298,20 @@
     }
     .bookmark-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(79,70,229,0.15);
+      box-shadow: 0 8px 20px rgba(79,70,229,0.14);
       border-color: var(--accent);
     }
     .bookmark-card img {
-      width: 44px;
-      height: 44px;
+      width: 44px; height: 44px;
       object-fit: contain;
       border-radius: 8px;
     }
     .bookmark-card .letter-icon {
-      width: 44px;
-      height: 44px;
+      width: 44px; height: 44px;
       border-radius: 10px;
       background: var(--accent-light);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 700;
       color: var(--accent);
     }
     .bookmark-card .bm-name {
@@ -305,23 +324,17 @@
       color: var(--muted);
     }
 
-    /* Delete btn */
     .card-del-btn {
       position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 18px;
-      height: 18px;
+      top: 4px; right: 4px;
+      width: 18px; height: 18px;
       border-radius: 50%;
       background: var(--accent2);
-      border: none;
-      color: #fff;
-      font-size: 11px;
-      line-height: 18px;
+      border: none; color: #fff;
+      font-size: 11px; line-height: 18px;
       text-align: center;
       cursor: pointer;
-      display: none;
-      z-index: 2;
+      display: none; z-index: 2;
     }
     .bookmark-card:hover .card-del-btn { display: block; }
     body.edit-mode .card-del-btn { display: block !important; }
@@ -340,101 +353,81 @@
       height: var(--card-size);
       border: 2px dashed var(--border);
       border-radius: var(--radius);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 5px;
       cursor: pointer;
       color: var(--muted);
       background: transparent;
       transition: border-color 0.15s, color 0.15s, background 0.15s;
-      font-size: 0.7rem;
-      font-weight: 600;
+      font-size: 0.7rem; font-weight: 600;
     }
     .add-card:hover {
       border-color: var(--accent);
       color: var(--accent);
       background: var(--accent-light);
     }
-    .add-card .plus { font-size: 1.6rem; line-height: 1; font-weight: 300; }
+    .add-card .plus { font-size: 1.5rem; line-height: 1; font-weight: 300; }
+
+    /* ── Empty hint ── */
+    #bm-empty {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      padding: 10px 0 0;
+    }
+    #bm-empty .empty-icon { font-size: 1.8rem; }
 
     /* ── Settings panel ── */
     .panel-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.25);
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.2);
       display: flex;
       align-items: flex-start;
       justify-content: flex-end;
       z-index: 100;
-      opacity: 0;
-      pointer-events: none;
+      opacity: 0; pointer-events: none;
       transition: opacity 0.2s;
       backdrop-filter: blur(2px);
     }
     .panel-overlay.open { opacity: 1; pointer-events: all; }
 
     #settings-panel {
-      margin: 56px 16px 0 0;
+      margin: 52px 16px 0 0;
       width: 300px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.14);
+      padding: 22px;
+      display: flex; flex-direction: column;
+      gap: 18px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.12);
     }
-    #settings-panel h3 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 10px;
-    }
+    #settings-panel h3 { font-size: 0.92rem; font-weight: 700; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
 
-    .setting-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .setting-row label {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--muted);
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-    }
+    .setting-row { display: flex; flex-direction: column; gap: 5px; }
+    .setting-row label { font-size: 0.75rem; font-weight: 700; color: var(--muted); letter-spacing: 0.4px; text-transform: uppercase; }
     .setting-row input {
       padding: 8px 12px;
       background: var(--surface2);
       border: 1.5px solid var(--border);
       border-radius: 8px;
-      color: var(--text);
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.15s;
+      color: var(--text); font-size: 0.9rem;
+      outline: none; transition: border-color 0.15s;
     }
     .setting-row input:focus { border-color: var(--accent); }
+    .setting-row .hint { font-size: 0.72rem; color: var(--muted); }
 
-    .setting-row .hint {
-      font-size: 0.72rem;
-      color: var(--muted);
-    }
-
-    /* ── Modals ── */
+    /* ── Bookmark modal ── */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.22);
+      display: flex; align-items: center; justify-content: center;
       z-index: 200;
-      opacity: 0;
-      pointer-events: none;
+      opacity: 0; pointer-events: none;
       transition: opacity 0.2s;
       backdrop-filter: blur(2px);
     }
@@ -444,87 +437,56 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 28px;
-      width: 400px;
-      max-width: 95vw;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      padding: 26px;
+      width: 400px; max-width: 95vw;
+      display: flex; flex-direction: column;
+      gap: 15px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.14);
     }
-    .modal h2 { font-size: 1.05rem; color: var(--accent); font-weight: 700; }
+    .modal h2 { font-size: 1rem; color: var(--accent); font-weight: 700; }
 
     .field { display: flex; flex-direction: column; gap: 5px; }
-    .field label { font-size: 0.78rem; color: var(--muted); font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; }
+    .field label { font-size: 0.75rem; color: var(--muted); font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; }
     .field input, .field select {
-      padding: 9px 12px;
+      padding: 8px 12px;
       background: var(--surface2);
       border: 1.5px solid var(--border);
       border-radius: 8px;
-      color: var(--text);
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.15s;
+      color: var(--text); font-size: 0.9rem;
+      outline: none; transition: border-color 0.15s;
     }
     .field input:focus, .field select:focus { border-color: var(--accent); }
 
     #img-preview-wrap { display: flex; align-items: flex-start; gap: 12px; }
     #img-preview {
-      width: 52px; height: 52px; border-radius: 10px; object-fit: contain;
+      width: 50px; height: 50px; border-radius: 10px; object-fit: contain;
       background: var(--surface2); border: 1px solid var(--border);
       display: none; flex-shrink: 0;
     }
     #img-preview.visible { display: block; }
     #img-placeholder {
-      width: 52px; height: 52px; border-radius: 10px;
+      width: 50px; height: 50px; border-radius: 10px;
       background: var(--surface2); border: 1.5px dashed var(--border);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; color: var(--muted); flex-shrink: 0;
+      font-size: 1.2rem; color: var(--muted); flex-shrink: 0;
     }
     .img-options { display: flex; flex-direction: column; gap: 5px; flex: 1; }
-    .img-options small { color: var(--muted); font-size: 0.73rem; }
-    .favicon-link { font-size: 0.73rem; color: var(--accent); cursor: pointer; font-weight: 600; }
+    .img-options small { color: var(--muted); font-size: 0.72rem; }
+    .favicon-link { font-size: 0.72rem; color: var(--accent); cursor: pointer; font-weight: 600; }
     .favicon-link:hover { text-decoration: underline; }
 
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
 
-    /* ── Edit mode section controls ── */
-    #section-edit-controls {
-      display: none;
-      align-items: center;
-      gap: 8px;
-    }
-    body.edit-mode #section-edit-controls { display: flex; }
-
-    /* ── Empty state ── */
-    #bm-empty {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 0.85rem;
-      padding: 24px 0;
-    }
-    #bm-empty .empty-icon { font-size: 2rem; }
-
     /* ── Toast ── */
     #toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) translateY(16px);
-      background: var(--accent);
-      color: #fff;
-      padding: 9px 20px;
-      border-radius: 30px;
-      font-size: 0.83rem;
-      font-weight: 600;
-      opacity: 0;
-      transition: opacity 0.25s, transform 0.25s;
-      pointer-events: none;
-      z-index: 300;
-      box-shadow: 0 4px 16px rgba(79,70,229,0.3);
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(14px);
+      background: var(--accent); color: #fff;
+      padding: 8px 20px; border-radius: 30px;
+      font-size: 0.82rem; font-weight: 600;
+      opacity: 0; transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none; z-index: 300;
+      box-shadow: 0 4px 16px rgba(79,70,229,0.28);
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
@@ -544,66 +506,60 @@
   </div>
 </div>
 
-<!-- Main -->
-<div id="main">
+<!-- Center stage -->
+<div id="stage">
+  <div id="stage-inner">
 
-  <!-- Search -->
-  <div id="search-wrap">
-    <div id="search-greeting"></div>
-    <div id="search-bar">
-      <input id="search-input" type="text" placeholder="Search Google…" autocomplete="off" />
-      <button id="search-btn" onclick="doSearch()" title="Search">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      </button>
+    <!-- Search -->
+    <div id="search-wrap">
+      <div id="search-greeting"></div>
+      <div id="search-bar">
+        <input id="search-input" type="text" placeholder="Search Google…" autocomplete="off" />
+        <button id="search-btn" onclick="doSearch()" title="Search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+      </div>
     </div>
-  </div>
 
-  <!-- Section nav -->
-  <div id="section-nav-wrap">
-    <div id="section-nav">
-      <!-- tabs rendered by JS -->
+    <!-- Section labels -->
+    <div id="section-nav"></div>
+
+    <!-- Bookmarks -->
+    <div id="bm-area">
+      <div id="bm-grid"></div>
+      <div id="bm-empty">
+        <span class="empty-icon">🔖</span>
+        <span>No bookmarks yet — click <strong>+</strong> to add one</span>
+      </div>
     </div>
-  </div>
 
-  <!-- Bookmark area -->
-  <div id="bm-area">
-    <div id="bm-grid"></div>
-    <div id="bm-empty">
-      <span class="empty-icon">🔖</span>
-      <span>No bookmarks yet — click the <strong>+</strong> card to add one</span>
-    </div>
   </div>
-
 </div>
 
 <!-- Settings panel -->
 <div class="panel-overlay" id="settings-overlay" onclick="closeSettingsOnOverlay(event)">
   <div id="settings-panel">
     <h3>⚙ Settings</h3>
-
     <div class="setting-row">
       <label>Your name</label>
       <input id="set-username" type="text" placeholder="e.g. Alex" oninput="applySettings()" />
-      <span class="hint">Shown in the greeting: "Good morning, Alex"</span>
+      <span class="hint">Shown in greeting: "Good morning, Alex"</span>
     </div>
-
     <div class="setting-row">
       <label>Grid columns</label>
       <input id="grid-size-input" type="number" min="1" max="20" value="6" oninput="updateCols(this.value)" />
       <span class="hint">Number of bookmark columns per row</span>
     </div>
-
     <button class="btn btn-ghost" style="align-self:flex-end;margin-top:4px" onclick="closeSettings()">Close</button>
   </div>
 </div>
 
 <!-- Bookmark modal -->
-<div class="modal-overlay" id="bm-modal-overlay" onclick="closeModalOnOverlay(event,'bm-modal-overlay',closeBmModal)">
+<div class="modal-overlay" id="bm-modal-overlay" onclick="closeOnOverlay(event,'bm-modal-overlay',closeBmModal)">
   <div class="modal">
     <h2 id="bm-modal-title">Add Bookmark</h2>
-
     <div class="field">
       <label>Name</label>
       <input id="bm-name" type="text" placeholder="e.g. GitHub" />
@@ -629,7 +585,6 @@
         </div>
       </div>
     </div>
-
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeBmModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveBookmark()">Save</button>
@@ -637,15 +592,11 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════════════
-   State
-═══════════════════════════ */
+/* ── State ── */
 let data = loadData();
-// { sections:[{id,name,bookmarks:[{name,url,img}]}], cols, username }
 let editMode = false;
 let activeSection = data.sections[0]?.id || null;
 let editingBm = null;
@@ -653,18 +604,15 @@ let pendingImgDataUrl = null;
 
 function loadData() {
   try {
-    const d = JSON.parse(localStorage.getItem('hp_data3') || 'null');
+    const d = JSON.parse(localStorage.getItem('hp_data4') || 'null');
     if (d && Array.isArray(d.sections) && d.sections.length) return d;
   } catch(_) {}
   return { sections: [{ id: uid(), name: 'General', bookmarks: [] }], cols: 6, username: '' };
 }
-
-function saveData() { localStorage.setItem('hp_data3', JSON.stringify(data)); }
+function saveData() { localStorage.setItem('hp_data4', JSON.stringify(data)); }
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
-/* ═══════════════════════════
-   Clock
-═══════════════════════════ */
+/* ── Clock ── */
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 function tick() {
   const now = new Date();
@@ -672,8 +620,7 @@ function tick() {
   const ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12 || 12;
   const m = String(now.getMinutes()).padStart(2, '0');
-  const day = DAYS[now.getDay()];
-  document.getElementById('clock-day').textContent = day + ', ';
+  document.getElementById('clock-day').textContent = DAYS[now.getDay()] + ', ';
   document.getElementById('clock-time').textContent = `${h}:${m} `;
   document.getElementById('clock-ampm').textContent = ampm;
 
@@ -685,54 +632,38 @@ function tick() {
 tick();
 setInterval(tick, 15000);
 
-/* ═══════════════════════════
-   Search
-═══════════════════════════ */
-document.getElementById('search-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doSearch();
-});
+/* ── Search ── */
+document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 function doSearch() {
   const q = document.getElementById('search-input').value.trim();
   if (!q) return;
   window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
 }
 
-/* ═══════════════════════════
-   Settings
-═══════════════════════════ */
+/* ── Settings ── */
 function openSettings() {
   document.getElementById('set-username').value = data.username || '';
   document.getElementById('grid-size-input').value = data.cols || 6;
   document.getElementById('settings-overlay').classList.add('open');
 }
-function closeSettings() {
-  document.getElementById('settings-overlay').classList.remove('open');
-}
-function closeSettingsOnOverlay(e) {
-  if (e.target === document.getElementById('settings-overlay')) closeSettings();
-}
+function closeSettings() { document.getElementById('settings-overlay').classList.remove('open'); }
+function closeSettingsOnOverlay(e) { if (e.target === document.getElementById('settings-overlay')) closeSettings(); }
 function applySettings() {
   data.username = document.getElementById('set-username').value.trim();
-  saveData();
-  tick();
+  saveData(); tick();
 }
 
-/* ═══════════════════════════
-   Grid cols
-═══════════════════════════ */
+/* ── Grid cols ── */
 function updateCols(v) {
   v = Math.max(1, Math.min(20, parseInt(v) || 6));
   data.cols = v;
   document.getElementById('grid-size-input').value = v;
-  document.documentElement.style.setProperty('--card-size',
-    v >= 10 ? '88px' : v >= 7 ? '100px' : '110px');
+  document.documentElement.style.setProperty('--card-size', v >= 10 ? '88px' : v >= 7 ? '100px' : '110px');
   saveData();
 }
 updateCols(data.cols);
 
-/* ═══════════════════════════
-   Edit mode
-═══════════════════════════ */
+/* ── Edit mode ── */
 function toggleEditMode() {
   editMode = !editMode;
   document.body.classList.toggle('edit-mode', editMode);
@@ -741,39 +672,43 @@ function toggleEditMode() {
   renderGrid();
 }
 
-/* ═══════════════════════════
-   Render nav tabs
-═══════════════════════════ */
+/* ── Nav ── */
 function renderNav() {
   const nav = document.getElementById('section-nav');
   nav.innerHTML = '';
 
-  data.sections.forEach(sec => {
+  data.sections.forEach((sec, idx) => {
+    // Separator dot between tabs
+    if (idx > 0) {
+      const dot = document.createElement('span');
+      dot.className = 'tab-dot';
+      nav.appendChild(dot);
+    }
+
     if (editMode) {
-      // Inline rename input
       const wrap = document.createElement('div');
-      wrap.style.display = 'flex';
-      wrap.style.alignItems = 'center';
-      wrap.style.gap = '4px';
+      wrap.className = 'section-tab-edit-wrap';
 
       const inp = document.createElement('input');
-      inp.className = 'section-tab-input' + (sec.id === activeSection ? ' active' : '');
+      inp.className = 'section-tab-input';
       inp.value = sec.name;
       inp.title = 'Rename section';
-      inp.style.background = sec.id === activeSection ? 'var(--accent-light)' : 'var(--surface2)';
-      inp.style.borderColor = sec.id === activeSection ? 'var(--accent)' : 'var(--border)';
-      inp.style.color = sec.id === activeSection ? 'var(--accent)' : 'var(--muted)';
-      inp.onclick = () => { activeSection = sec.id; renderNav(); renderGrid(); };
-      inp.addEventListener('change', () => {
+      inp.addEventListener('input', () => {
+        sec.name = inp.value;
+        saveData();
+      });
+      inp.addEventListener('blur', () => {
         sec.name = inp.value.trim() || 'Untitled';
+        inp.value = sec.name;
         saveData();
         renderNav();
       });
+      inp.addEventListener('click', () => { activeSection = sec.id; renderNav(); renderGrid(); });
 
       const delBtn = document.createElement('button');
+      delBtn.className = 'section-tab-del';
       delBtn.textContent = '✕';
       delBtn.title = 'Delete section';
-      delBtn.style.cssText = 'width:18px;height:18px;border-radius:50%;background:var(--accent2);border:none;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:18px;flex-shrink:0;';
       delBtn.onclick = () => deleteSection(sec.id);
 
       wrap.appendChild(inp);
@@ -788,18 +723,21 @@ function renderNav() {
     }
   });
 
-  // Add section tab
+  // Separator before add button
+  if (data.sections.length > 0) {
+    const dot = document.createElement('span');
+    dot.className = 'tab-dot';
+    nav.appendChild(dot);
+  }
+
   const addTab = document.createElement('button');
   addTab.className = 'add-section-tab';
   addTab.textContent = '＋ Section';
-  addTab.title = 'Add new section';
   addTab.onclick = addSection;
   nav.appendChild(addTab);
 }
 
-/* ═══════════════════════════
-   Render grid
-═══════════════════════════ */
+/* ── Grid ── */
 function renderGrid() {
   const grid = document.getElementById('bm-grid');
   const empty = document.getElementById('bm-empty');
@@ -808,17 +746,10 @@ function renderGrid() {
   const sec = data.sections.find(s => s.id === activeSection);
   if (!sec) { empty.style.display = 'flex'; return; }
 
-  if (sec.bookmarks.length === 0) {
-    empty.style.display = 'flex';
-  } else {
-    empty.style.display = 'none';
-  }
+  empty.style.display = sec.bookmarks.length === 0 ? 'flex' : 'none';
 
-  sec.bookmarks.forEach((bm, i) => {
-    grid.appendChild(makeCard(bm, i, sec.id));
-  });
+  sec.bookmarks.forEach((bm, i) => grid.appendChild(makeCard(bm, i, sec.id)));
 
-  // Add placeholder card
   const addCard = document.createElement('div');
   addCard.className = 'add-card';
   addCard.title = 'Add bookmark';
@@ -838,8 +769,7 @@ function makeCard(bm, i, sectionId) {
 
   if (bm.img) {
     const img = document.createElement('img');
-    img.src = bm.img;
-    img.alt = bm.name;
+    img.src = bm.img; img.alt = bm.name;
     img.onerror = () => img.replaceWith(letterIcon(bm.name));
     a.appendChild(img);
   } else {
@@ -854,13 +784,10 @@ function makeCard(bm, i, sectionId) {
   const del = document.createElement('button');
   del.className = 'card-del-btn';
   del.textContent = '×';
-  del.title = 'Remove';
   del.onclick = e => { e.preventDefault(); e.stopPropagation(); deleteBm(sectionId, i); };
   a.appendChild(del);
 
-  a.addEventListener('click', e => {
-    if (editMode) { e.preventDefault(); openEditBmModal(sectionId, i); }
-  });
+  a.addEventListener('click', e => { if (editMode) { e.preventDefault(); openEditBmModal(sectionId, i); } });
   return a;
 }
 
@@ -871,40 +798,29 @@ function letterIcon(name) {
   return div;
 }
 
-/* ═══════════════════════════
-   Sections
-═══════════════════════════ */
+/* ── Sections ── */
 function addSection() {
   const sec = { id: uid(), name: 'New Section', bookmarks: [] };
   data.sections.push(sec);
   activeSection = sec.id;
-  saveData();
-  renderNav();
-  renderGrid();
-  toast('Section added — rename it in the tab above');
+  saveData(); renderNav(); renderGrid();
+  toast('Section added — click Edit to rename it');
 }
 
 function deleteSection(id) {
-  const sec = data.sections.find(s => s.id === id);
-  if (!sec) return;
   if (data.sections.length === 1) { toast("Can't delete the last section"); return; }
-  if (sec.bookmarks.length > 0 && !confirm(`Delete "${sec.name}" and its ${sec.bookmarks.length} bookmark(s)?`)) return;
+  const sec = data.sections.find(s => s.id === id);
+  if (sec?.bookmarks.length > 0 && !confirm(`Delete "${sec.name}" and its ${sec.bookmarks.length} bookmark(s)?`)) return;
   data.sections = data.sections.filter(s => s.id !== id);
   activeSection = data.sections[0].id;
-  saveData();
-  renderNav();
-  renderGrid();
+  saveData(); renderNav(); renderGrid();
   toast('Section removed');
 }
 
-/* ═══════════════════════════
-   Bookmarks
-═══════════════════════════ */
+/* ── Bookmarks ── */
 function deleteBm(sectionId, i) {
   const sec = data.sections.find(s => s.id === sectionId);
-  if (sec) sec.bookmarks.splice(i, 1);
-  renderGrid();
-  toast('Bookmark removed');
+  if (sec) { sec.bookmarks.splice(i, 1); renderGrid(); toast('Bookmark removed'); }
 }
 
 function openAddBmModal(sectionId) {
@@ -913,6 +829,7 @@ function openAddBmModal(sectionId) {
   document.getElementById('bm-modal-title').textContent = 'Add Bookmark';
   populateSectionSelect(sectionId);
   document.getElementById('bm-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('bm-name').focus(), 100);
 }
 
 function openEditBmModal(sectionId, i) {
@@ -935,8 +852,7 @@ function populateSectionSelect(selectedId) {
   sel.innerHTML = '';
   data.sections.forEach(s => {
     const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = s.name;
+    opt.value = s.id; opt.textContent = s.name;
     if (s.id === selectedId) opt.selected = true;
     sel.appendChild(opt);
   });
@@ -947,14 +863,10 @@ function closeBmModal() {
   clearBmModal();
 }
 
-function closeModalOnOverlay(e, id, closeFn) {
-  if (e.target === document.getElementById(id)) closeFn();
-}
+function closeOnOverlay(e, id, fn) { if (e.target === document.getElementById(id)) fn(); }
 
 function clearBmModal() {
-  document.getElementById('bm-name').value = '';
-  document.getElementById('bm-url').value = '';
-  document.getElementById('bm-img-url').value = '';
+  ['bm-name','bm-url','bm-img-url'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('bm-img-file').value = '';
   pendingImgDataUrl = null;
   clearImgPreview();
@@ -967,7 +879,7 @@ function saveBookmark() {
   const targetSectionId = document.getElementById('bm-section').value;
 
   if (!name) { toast('Please enter a name'); return; }
-  if (!url)  { toast('Please enter a URL');  return; }
+  if (!url)  { toast('Please enter a URL'); return; }
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
   let img = pendingImgDataUrl || imgUrl || null;
@@ -975,17 +887,15 @@ function saveBookmark() {
     try { img = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`; } catch(_) {}
   }
 
-  const bm = { name, url, img };
-
   if (editingBm) {
-    const oldSec = data.sections.find(s => s.id === editingBm.sectionId);
-    if (oldSec) oldSec.bookmarks.splice(editingBm.bmIndex, 1);
-    const newSec = data.sections.find(s => s.id === targetSectionId);
-    if (newSec) newSec.bookmarks.push(bm);
+    const old = data.sections.find(s => s.id === editingBm.sectionId);
+    if (old) old.bookmarks.splice(editingBm.bmIndex, 1);
+    const nw = data.sections.find(s => s.id === targetSectionId);
+    if (nw) nw.bookmarks.push({ name, url, img });
     toast('Bookmark updated');
   } else {
     const sec = data.sections.find(s => s.id === targetSectionId);
-    if (sec) sec.bookmarks.push(bm);
+    if (sec) sec.bookmarks.push({ name, url, img });
     toast('Bookmark added');
   }
 
@@ -994,9 +904,7 @@ function saveBookmark() {
   renderGrid();
 }
 
-/* ═══════════════════════════
-   Image
-═══════════════════════════ */
+/* ── Image ── */
 function showImgPreview(src) {
   document.getElementById('img-preview').src = src;
   document.getElementById('img-preview').classList.add('visible');
@@ -1030,9 +938,7 @@ function useFavicon() {
   } catch(_) { toast('Invalid URL'); }
 }
 
-/* ═══════════════════════════
-   Toast
-═══════════════════════════ */
+/* ── Toast ── */
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -1040,9 +946,7 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-/* ═══════════════════════════
-   Init
-═══════════════════════════ */
+/* ── Init ── */
 renderNav();
 renderGrid();
 </script>
