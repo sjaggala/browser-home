@@ -92,26 +92,31 @@
     }
     .icon-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
 
-    /* ── Center stage ── */
-    /* Uses a flex column that is itself centered in the remaining vertical space */
-    #stage {
-      flex: 1;
-      display: flex;
-      align-items: center;        /* vertical center */
-      justify-content: center;
-      overflow-y: auto;
-      padding: 24px;
-    }
-
-    #stage-inner {
-      width: 100%;
-      max-width: 700px;
+    /* ── Search zone — fixed height, never moves ── */
+    #search-zone {
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 28px;
-      /* Shift slightly above true center for visual comfort */
-      margin-bottom: 5vh;
+      justify-content: center;
+      padding: 36px 24px 28px;
+      gap: 20px;
+      background: var(--bg);
+    }
+
+    /* ── Bookmark zone — takes remaining space, scrolls independently ── */
+    #bm-zone {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 24px 48px;
+    }
+
+    /* legacy — unused */
+    #stage-inner {
+      display: none;
     }
 
     /* ── Search ── */
@@ -505,35 +510,31 @@
   </div>
 </div>
 
-<!-- Center stage -->
-<div id="stage">
-  <div id="stage-inner">
-
-    <!-- Search -->
-    <div id="search-wrap">
-      <div id="search-greeting"></div>
-      <div id="search-bar">
-        <input id="search-input" type="text" placeholder="Search Google…" autocomplete="off" />
-        <button id="search-btn" onclick="doSearch()" title="Search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </button>
-      </div>
+<!-- Fixed search zone — never shifts regardless of bookmark count -->
+<div id="search-zone">
+  <div id="search-wrap">
+    <div id="search-greeting"></div>
+    <div id="search-bar">
+      <input id="search-input" type="text" placeholder="Search Google…" autocomplete="off" />
+      <button id="search-btn" onclick="doSearch()" title="Search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
     </div>
+  </div>
+  <!-- Section labels sit just below search, also fixed -->
+  <div id="section-nav"></div>
+</div>
 
-    <!-- Section labels -->
-    <div id="section-nav"></div>
-
-    <!-- Bookmarks -->
-    <div id="bm-area">
-      <div id="bm-grid"></div>
-      <div id="bm-empty">
-        <span class="empty-icon">🔖</span>
-        <span>No bookmarks yet — click <strong>+</strong> to add one</span>
-      </div>
+<!-- Scrollable bookmark zone — grows/shrinks independently -->
+<div id="bm-zone">
+  <div id="bm-area">
+    <div id="bm-grid"></div>
+    <div id="bm-empty">
+      <span class="empty-icon">🔖</span>
+      <span>No bookmarks yet — click <strong>+</strong> to add one</span>
     </div>
-
   </div>
 </div>
 
@@ -601,14 +602,28 @@ let activeSection = data.sections[0]?.id || null;
 let editingBm = null;
 let pendingImgDataUrl = null;
 
+const STORAGE_KEY = 'hp_home'; // permanent — never change this again
+const LEGACY_KEYS = ['hp_data4', 'hp_data3', 'hp_data2', 'hp_data'];
+
 function loadData() {
+  // Try the stable key first
   try {
-    const d = JSON.parse(localStorage.getItem('hp_data4') || 'null');
+    const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if (d && Array.isArray(d.sections) && d.sections.length) return d;
   } catch(_) {}
+  // Migrate from any legacy key (newest to oldest)
+  for (const key of LEGACY_KEYS) {
+    try {
+      const d = JSON.parse(localStorage.getItem(key) || 'null');
+      if (d && Array.isArray(d.sections) && d.sections.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); // promote to stable key
+        return d;
+      }
+    } catch(_) {}
+  }
   return { sections: [{ id: uid(), name: 'General', bookmarks: [] }], cols: 6, username: '' };
 }
-function saveData() { localStorage.setItem('hp_data4', JSON.stringify(data)); }
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
 /* ── Clock ── */
