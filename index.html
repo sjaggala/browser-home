@@ -44,11 +44,15 @@
     }
 
     #clock {
-      font-size: 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+    }
+    #clock .time-main {
+      font-size: 1.1rem;
       font-weight: 700;
-      letter-spacing: 1px;
       color: var(--accent);
-      min-width: 90px;
     }
 
     #topbar-right {
@@ -57,25 +61,21 @@
       align-items: center;
     }
 
-    /* ── Grid size control ── */
-    #grid-controls {
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.8rem;
+      justify-content: center;
+      cursor: pointer;
       color: var(--muted);
+      font-size: 1rem;
+      transition: all 0.15s;
     }
-    #grid-controls label { font-weight: 600; }
-    #grid-size-input {
-      width: 46px;
-      padding: 3px 6px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 0.82rem;
-      text-align: center;
-    }
+    .icon-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
 
     .btn {
       padding: 7px 14px;
@@ -93,30 +93,34 @@
       border: 1px solid var(--border);
     }
     .btn-ghost:hover { background: var(--border); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-danger { background: #fee2e2; color: var(--accent2); border: 1px solid #fecaca; }
+    .btn-danger:hover { background: #fecaca; }
 
-    /* ── Main layout: search up top-ish of center, sections below ── */
+    /* ── Main layout ── */
     #main {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px 24px 60px;
-      gap: 32px;
+      padding: 44px 24px 60px;
+      gap: 24px;
       overflow-y: auto;
     }
 
     /* ── Search ── */
     #search-wrap {
       width: 100%;
-      max-width: 560px;
+      max-width: 540px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     #search-greeting {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 700;
       color: var(--text);
       letter-spacing: -0.3px;
@@ -125,6 +129,7 @@
     #search-bar {
       width: 100%;
       display: flex;
+      align-items: center;
       background: var(--surface);
       border: 1.5px solid var(--border);
       border-radius: 40px;
@@ -149,82 +154,98 @@
     #search-input::placeholder { color: var(--muted); }
 
     #search-btn {
-      padding: 10px 20px;
-      background: var(--accent);
-      border: none;
-      color: #fff;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background 0.15s;
-    }
-    #search-btn:hover { background: #4338ca; }
-
-    /* ── Sections container ── */
-    #sections-container {
-      width: 100%;
-      max-width: 900px;
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
-
-    /* ── Section ── */
-    .section-block {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .section-label-input {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--muted);
+      padding: 8px 16px 8px 8px;
       background: transparent;
       border: none;
-      border-bottom: 1.5px dashed var(--border);
-      outline: none;
-      padding: 2px 4px;
-      width: 120px;
-    }
-    .section-label-input:focus { border-color: var(--accent); color: var(--accent); }
-
-    .section-line {
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .section-del-btn {
-      background: none;
-      border: none;
       color: var(--muted);
       cursor: pointer;
-      font-size: 0.8rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      display: none;
+      font-size: 1.1rem;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
     }
-    .section-del-btn:hover { color: var(--accent2); background: #fee2e2; }
-    body.edit-mode .section-del-btn { display: inline; }
+    #search-btn:hover { color: var(--accent); }
 
-    /* ── Bookmark grid inside section ── */
-    .bm-grid {
+    /* ── Section nav bar ── */
+    #section-nav-wrap {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    #section-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 40px;
+      padding: 4px 6px;
+      box-shadow: var(--shadow);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .section-tab {
+      padding: 6px 18px;
+      border-radius: 30px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .section-tab:hover { background: var(--surface2); color: var(--text); }
+    .section-tab.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Inline rename in edit mode */
+    .section-tab-input {
+      padding: 4px 10px;
+      border-radius: 30px;
+      border: 1.5px dashed var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      outline: none;
+      width: 110px;
+    }
+
+    .add-section-tab {
+      padding: 6px 12px;
+      border-radius: 30px;
+      border: 1.5px dashed var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .add-section-tab:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+    /* ── Bookmark grid ── */
+    #bm-area {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      min-height: 160px;
+    }
+
+    #bm-grid {
       display: flex;
       flex-wrap: wrap;
       gap: var(--gap);
@@ -270,11 +291,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 700;
       color: var(--accent);
     }
-    .bookmark-card .name {
+    .bookmark-card .bm-name {
       font-size: 0.68rem;
       font-weight: 600;
       text-align: center;
@@ -284,7 +305,7 @@
       color: var(--muted);
     }
 
-    /* Delete btn on card */
+    /* Delete btn */
     .card-del-btn {
       position: absolute;
       top: 4px;
@@ -304,8 +325,6 @@
     }
     .bookmark-card:hover .card-del-btn { display: block; }
     body.edit-mode .card-del-btn { display: block !important; }
-
-    /* Wiggle in edit mode */
     body.edit-mode .bookmark-card {
       animation: wiggle 0.35s ease infinite alternate;
     }
@@ -338,43 +357,82 @@
       color: var(--accent);
       background: var(--accent-light);
     }
-    .add-card .plus {
-      font-size: 1.6rem;
-      line-height: 1;
-      font-weight: 300;
+    .add-card .plus { font-size: 1.6rem; line-height: 1; font-weight: 300; }
+
+    /* ── Settings panel ── */
+    .panel-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      backdrop-filter: blur(2px);
+    }
+    .panel-overlay.open { opacity: 1; pointer-events: all; }
+
+    #settings-panel {
+      margin: 56px 16px 0 0;
+      width: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.14);
+    }
+    #settings-panel h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
     }
 
-    /* ── Add section button ── */
-    #add-section-btn {
+    .setting-row {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      background: none;
-      border: 1.5px dashed var(--border);
-      border-radius: 10px;
-      padding: 10px 20px;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.82rem;
-      font-weight: 600;
-      transition: all 0.15s;
-      align-self: center;
+      flex-direction: column;
+      gap: 6px;
     }
-    #add-section-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: var(--accent-light);
+    .setting-row label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .setting-row input {
+      padding: 8px 12px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .setting-row input:focus { border-color: var(--accent); }
+
+    .setting-row .hint {
+      font-size: 0.72rem;
+      color: var(--muted);
     }
 
     /* ── Modals ── */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.25);
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 100;
+      z-index: 200;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s;
@@ -397,7 +455,7 @@
     .modal h2 { font-size: 1.05rem; color: var(--accent); font-weight: 700; }
 
     .field { display: flex; flex-direction: column; gap: 5px; }
-    .field label { font-size: 0.78rem; color: var(--muted); font-weight: 700; letter-spacing: 0.3px; }
+    .field label { font-size: 0.78rem; color: var(--muted); font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; }
     .field input, .field select {
       padding: 9px 12px;
       background: var(--surface2);
@@ -410,48 +468,45 @@
     }
     .field input:focus, .field select:focus { border-color: var(--accent); }
 
-    #img-preview-wrap {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
+    #img-preview-wrap { display: flex; align-items: flex-start; gap: 12px; }
     #img-preview {
-      width: 52px;
-      height: 52px;
-      border-radius: 10px;
-      object-fit: contain;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      display: none;
-      flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 10px; object-fit: contain;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: none; flex-shrink: 0;
     }
     #img-preview.visible { display: block; }
     #img-placeholder {
-      width: 52px;
-      height: 52px;
-      border-radius: 10px;
-      background: var(--surface2);
-      border: 1.5px dashed var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      color: var(--muted);
-      flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 10px;
+      background: var(--surface2); border: 1.5px dashed var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; color: var(--muted); flex-shrink: 0;
     }
     .img-options { display: flex; flex-direction: column; gap: 5px; flex: 1; }
     .img-options small { color: var(--muted); font-size: 0.73rem; }
-    .favicon-link {
-      font-size: 0.73rem;
-      color: var(--accent);
-      cursor: pointer;
-      font-weight: 600;
-    }
+    .favicon-link { font-size: 0.73rem; color: var(--accent); cursor: pointer; font-weight: 600; }
     .favicon-link:hover { text-decoration: underline; }
 
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: #4338ca; }
+
+    /* ── Edit mode section controls ── */
+    #section-edit-controls {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    body.edit-mode #section-edit-controls { display: flex; }
+
+    /* ── Empty state ── */
+    #bm-empty {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 24px 0;
+    }
+    #bm-empty .empty-icon { font-size: 2rem; }
 
     /* ── Toast ── */
     #toast {
@@ -468,7 +523,7 @@
       opacity: 0;
       transition: opacity 0.25s, transform 0.25s;
       pointer-events: none;
-      z-index: 200;
+      z-index: 300;
       box-shadow: 0 4px 16px rgba(79,70,229,0.3);
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -478,38 +533,74 @@
 
 <!-- Top bar -->
 <div id="topbar">
-  <div id="clock">00:00</div>
+  <div id="clock">
+    <span id="clock-day"></span>
+    <span class="time-main" id="clock-time"></span>
+    <span id="clock-ampm"></span>
+  </div>
   <div id="topbar-right">
-    <div id="grid-controls">
-      <label for="grid-size-input">Cols:</label>
-      <input id="grid-size-input" type="number" min="1" max="20" value="6" oninput="updateCols(this.value)" />
-    </div>
     <button class="btn btn-ghost" id="edit-btn" onclick="toggleEditMode()">Edit</button>
+    <div class="icon-btn" title="Settings" onclick="openSettings()">⚙</div>
   </div>
 </div>
 
-<!-- Main content -->
+<!-- Main -->
 <div id="main">
 
-  <!-- Search centered, slightly above mid -->
+  <!-- Search -->
   <div id="search-wrap">
     <div id="search-greeting"></div>
     <div id="search-bar">
       <input id="search-input" type="text" placeholder="Search Google…" autocomplete="off" />
-      <button id="search-btn" onclick="doSearch()">&#128269;</button>
+      <button id="search-btn" onclick="doSearch()" title="Search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <!-- Sections -->
-  <div id="sections-container"></div>
+  <!-- Section nav -->
+  <div id="section-nav-wrap">
+    <div id="section-nav">
+      <!-- tabs rendered by JS -->
+    </div>
+  </div>
 
-  <!-- Add section -->
-  <button id="add-section-btn" onclick="addSection()">＋ New Section</button>
+  <!-- Bookmark area -->
+  <div id="bm-area">
+    <div id="bm-grid"></div>
+    <div id="bm-empty">
+      <span class="empty-icon">🔖</span>
+      <span>No bookmarks yet — click the <strong>+</strong> card to add one</span>
+    </div>
+  </div>
 
 </div>
 
+<!-- Settings panel -->
+<div class="panel-overlay" id="settings-overlay" onclick="closeSettingsOnOverlay(event)">
+  <div id="settings-panel">
+    <h3>⚙ Settings</h3>
+
+    <div class="setting-row">
+      <label>Your name</label>
+      <input id="set-username" type="text" placeholder="e.g. Alex" oninput="applySettings()" />
+      <span class="hint">Shown in the greeting: "Good morning, Alex"</span>
+    </div>
+
+    <div class="setting-row">
+      <label>Grid columns</label>
+      <input id="grid-size-input" type="number" min="1" max="20" value="6" oninput="updateCols(this.value)" />
+      <span class="hint">Number of bookmark columns per row</span>
+    </div>
+
+    <button class="btn btn-ghost" style="align-self:flex-end;margin-top:4px" onclick="closeSettings()">Close</button>
+  </div>
+</div>
+
 <!-- Bookmark modal -->
-<div class="modal-overlay" id="bm-modal-overlay" onclick="closeModalOnOverlay(event,'bm-modal-overlay')">
+<div class="modal-overlay" id="bm-modal-overlay" onclick="closeModalOnOverlay(event,'bm-modal-overlay',closeBmModal)">
   <div class="modal">
     <h2 id="bm-modal-title">Add Bookmark</h2>
 
@@ -550,50 +641,53 @@
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════
+/* ═══════════════════════════
    State
-═══════════════════════════════════════ */
-let data = load();
-// data = { sections: [{ id, name, bookmarks: [{name,url,img}] }], cols }
+═══════════════════════════ */
+let data = loadData();
+// { sections:[{id,name,bookmarks:[{name,url,img}]}], cols, username }
 let editMode = false;
-let editingBm = null;     // {sectionId, bmIndex} or null
-let addingToSection = null; // sectionId
+let activeSection = data.sections[0]?.id || null;
+let editingBm = null;
 let pendingImgDataUrl = null;
 
-function load() {
+function loadData() {
   try {
-    const d = JSON.parse(localStorage.getItem('hp_data2') || 'null');
-    if (d && Array.isArray(d.sections)) return d;
+    const d = JSON.parse(localStorage.getItem('hp_data3') || 'null');
+    if (d && Array.isArray(d.sections) && d.sections.length) return d;
   } catch(_) {}
-  return { sections: [{ id: uid(), name: 'General', bookmarks: [] }], cols: 6 };
+  return { sections: [{ id: uid(), name: 'General', bookmarks: [] }], cols: 6, username: '' };
 }
 
-function save() {
-  localStorage.setItem('hp_data2', JSON.stringify(data));
-}
+function saveData() { localStorage.setItem('hp_data3', JSON.stringify(data)); }
+function uid() { return Math.random().toString(36).slice(2, 10); }
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-/* ═══════════════════════════════════════
-   Clock & Greeting
-═══════════════════════════════════════ */
+/* ═══════════════════════════
+   Clock
+═══════════════════════════ */
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 function tick() {
   const now = new Date();
-  const h = String(now.getHours()).padStart(2, '0');
+  let h = now.getHours();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
   const m = String(now.getMinutes()).padStart(2, '0');
-  document.getElementById('clock').textContent = `${h}:${m}`;
+  const day = DAYS[now.getDay()];
+  document.getElementById('clock-day').textContent = day + ', ';
+  document.getElementById('clock-time').textContent = `${h}:${m} `;
+  document.getElementById('clock-ampm').textContent = ampm;
+
   const hr = now.getHours();
+  const name = data.username ? `, ${data.username}` : '';
   const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('search-greeting').textContent = greet;
+  document.getElementById('search-greeting').textContent = greet + name;
 }
 tick();
 setInterval(tick, 15000);
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════
    Search
-═══════════════════════════════════════ */
+═══════════════════════════ */
 document.getElementById('search-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') doSearch();
 });
@@ -603,91 +697,136 @@ function doSearch() {
   window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════
+   Settings
+═══════════════════════════ */
+function openSettings() {
+  document.getElementById('set-username').value = data.username || '';
+  document.getElementById('grid-size-input').value = data.cols || 6;
+  document.getElementById('settings-overlay').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+function closeSettingsOnOverlay(e) {
+  if (e.target === document.getElementById('settings-overlay')) closeSettings();
+}
+function applySettings() {
+  data.username = document.getElementById('set-username').value.trim();
+  saveData();
+  tick();
+}
+
+/* ═══════════════════════════
    Grid cols
-═══════════════════════════════════════ */
+═══════════════════════════ */
 function updateCols(v) {
   v = Math.max(1, Math.min(20, parseInt(v) || 6));
   data.cols = v;
   document.getElementById('grid-size-input').value = v;
   document.documentElement.style.setProperty('--card-size',
-    v >= 10 ? '90px' : v >= 7 ? '100px' : '110px');
-  save();
+    v >= 10 ? '88px' : v >= 7 ? '100px' : '110px');
+  saveData();
 }
 updateCols(data.cols);
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════
    Edit mode
-═══════════════════════════════════════ */
+═══════════════════════════ */
 function toggleEditMode() {
   editMode = !editMode;
   document.body.classList.toggle('edit-mode', editMode);
   document.getElementById('edit-btn').textContent = editMode ? 'Done' : 'Edit';
+  renderNav();
+  renderGrid();
 }
 
-/* ═══════════════════════════════════════
-   Render
-═══════════════════════════════════════ */
-function render() {
-  const container = document.getElementById('sections-container');
-  container.innerHTML = '';
+/* ═══════════════════════════
+   Render nav tabs
+═══════════════════════════ */
+function renderNav() {
+  const nav = document.getElementById('section-nav');
+  nav.innerHTML = '';
 
-  data.sections.forEach(section => {
-    const block = document.createElement('div');
-    block.className = 'section-block';
-    block.dataset.id = section.id;
+  data.sections.forEach(sec => {
+    if (editMode) {
+      // Inline rename input
+      const wrap = document.createElement('div');
+      wrap.style.display = 'flex';
+      wrap.style.alignItems = 'center';
+      wrap.style.gap = '4px';
 
-    // Header
-    const header = document.createElement('div');
-    header.className = 'section-header';
+      const inp = document.createElement('input');
+      inp.className = 'section-tab-input' + (sec.id === activeSection ? ' active' : '');
+      inp.value = sec.name;
+      inp.title = 'Rename section';
+      inp.style.background = sec.id === activeSection ? 'var(--accent-light)' : 'var(--surface2)';
+      inp.style.borderColor = sec.id === activeSection ? 'var(--accent)' : 'var(--border)';
+      inp.style.color = sec.id === activeSection ? 'var(--accent)' : 'var(--muted)';
+      inp.onclick = () => { activeSection = sec.id; renderNav(); renderGrid(); };
+      inp.addEventListener('change', () => {
+        sec.name = inp.value.trim() || 'Untitled';
+        saveData();
+        renderNav();
+      });
 
-    const labelInput = document.createElement('input');
-    labelInput.className = 'section-label-input';
-    labelInput.value = section.name;
-    labelInput.title = 'Click to rename section';
-    labelInput.addEventListener('change', () => {
-      section.name = labelInput.value.trim() || 'Untitled';
-      labelInput.value = section.name;
-      save();
-    });
-    // Prevent click from triggering other things
-    labelInput.addEventListener('click', e => e.stopPropagation());
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '✕';
+      delBtn.title = 'Delete section';
+      delBtn.style.cssText = 'width:18px;height:18px;border-radius:50%;background:var(--accent2);border:none;color:#fff;font-size:10px;cursor:pointer;padding:0;line-height:18px;flex-shrink:0;';
+      delBtn.onclick = () => deleteSection(sec.id);
 
-    const line = document.createElement('div');
-    line.className = 'section-line';
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'section-del-btn';
-    delBtn.textContent = '✕ Remove section';
-    delBtn.title = 'Delete this section and its bookmarks';
-    delBtn.onclick = () => deleteSection(section.id);
-
-    header.appendChild(labelInput);
-    header.appendChild(line);
-    header.appendChild(delBtn);
-    block.appendChild(header);
-
-    // Grid
-    const grid = document.createElement('div');
-    grid.className = 'bm-grid';
-
-    section.bookmarks.forEach((bm, i) => {
-      grid.appendChild(makeCard(bm, i, section.id));
-    });
-
-    // Add placeholder card
-    const addCard = document.createElement('div');
-    addCard.className = 'add-card';
-    addCard.title = 'Add bookmark to ' + section.name;
-    addCard.onclick = () => openAddBmModal(section.id);
-    addCard.innerHTML = `<span class="plus">+</span><span>Add</span>`;
-    grid.appendChild(addCard);
-
-    block.appendChild(grid);
-    container.appendChild(block);
+      wrap.appendChild(inp);
+      wrap.appendChild(delBtn);
+      nav.appendChild(wrap);
+    } else {
+      const tab = document.createElement('button');
+      tab.className = 'section-tab' + (sec.id === activeSection ? ' active' : '');
+      tab.textContent = sec.name;
+      tab.onclick = () => { activeSection = sec.id; renderNav(); renderGrid(); };
+      nav.appendChild(tab);
+    }
   });
 
-  save();
+  // Add section tab
+  const addTab = document.createElement('button');
+  addTab.className = 'add-section-tab';
+  addTab.textContent = '＋ Section';
+  addTab.title = 'Add new section';
+  addTab.onclick = addSection;
+  nav.appendChild(addTab);
+}
+
+/* ═══════════════════════════
+   Render grid
+═══════════════════════════ */
+function renderGrid() {
+  const grid = document.getElementById('bm-grid');
+  const empty = document.getElementById('bm-empty');
+  grid.innerHTML = '';
+
+  const sec = data.sections.find(s => s.id === activeSection);
+  if (!sec) { empty.style.display = 'flex'; return; }
+
+  if (sec.bookmarks.length === 0) {
+    empty.style.display = 'flex';
+  } else {
+    empty.style.display = 'none';
+  }
+
+  sec.bookmarks.forEach((bm, i) => {
+    grid.appendChild(makeCard(bm, i, sec.id));
+  });
+
+  // Add placeholder card
+  const addCard = document.createElement('div');
+  addCard.className = 'add-card';
+  addCard.title = 'Add bookmark';
+  addCard.onclick = () => openAddBmModal(sec.id);
+  addCard.innerHTML = `<span class="plus">+</span><span>Add</span>`;
+  grid.appendChild(addCard);
+
+  saveData();
 }
 
 function makeCard(bm, i, sectionId) {
@@ -708,7 +847,7 @@ function makeCard(bm, i, sectionId) {
   }
 
   const span = document.createElement('span');
-  span.className = 'name';
+  span.className = 'bm-name';
   span.textContent = bm.name;
   a.appendChild(span);
 
@@ -722,7 +861,6 @@ function makeCard(bm, i, sectionId) {
   a.addEventListener('click', e => {
     if (editMode) { e.preventDefault(); openEditBmModal(sectionId, i); }
   });
-
   return a;
 }
 
@@ -733,40 +871,44 @@ function letterIcon(name) {
   return div;
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════
    Sections
-═══════════════════════════════════════ */
+═══════════════════════════ */
 function addSection() {
-  data.sections.push({ id: uid(), name: 'New Section', bookmarks: [] });
-  render();
-  toast('Section added — click the label to rename it');
+  const sec = { id: uid(), name: 'New Section', bookmarks: [] };
+  data.sections.push(sec);
+  activeSection = sec.id;
+  saveData();
+  renderNav();
+  renderGrid();
+  toast('Section added — rename it in the tab above');
 }
 
 function deleteSection(id) {
   const sec = data.sections.find(s => s.id === id);
   if (!sec) return;
-  if (sec.bookmarks.length > 0) {
-    if (!confirm(`Delete section "${sec.name}" and its ${sec.bookmarks.length} bookmark(s)?`)) return;
-  }
+  if (data.sections.length === 1) { toast("Can't delete the last section"); return; }
+  if (sec.bookmarks.length > 0 && !confirm(`Delete "${sec.name}" and its ${sec.bookmarks.length} bookmark(s)?`)) return;
   data.sections = data.sections.filter(s => s.id !== id);
-  render();
+  activeSection = data.sections[0].id;
+  saveData();
+  renderNav();
+  renderGrid();
   toast('Section removed');
 }
 
-/* ═══════════════════════════════════════
-   Bookmark CRUD
-═══════════════════════════════════════ */
+/* ═══════════════════════════
+   Bookmarks
+═══════════════════════════ */
 function deleteBm(sectionId, i) {
   const sec = data.sections.find(s => s.id === sectionId);
-  if (!sec) return;
-  sec.bookmarks.splice(i, 1);
-  render();
+  if (sec) sec.bookmarks.splice(i, 1);
+  renderGrid();
   toast('Bookmark removed');
 }
 
 function openAddBmModal(sectionId) {
   editingBm = null;
-  addingToSection = sectionId;
   clearBmModal();
   document.getElementById('bm-modal-title').textContent = 'Add Bookmark';
   populateSectionSelect(sectionId);
@@ -778,7 +920,6 @@ function openEditBmModal(sectionId, i) {
   if (!sec) return;
   const bm = sec.bookmarks[i];
   editingBm = { sectionId, bmIndex: i };
-  addingToSection = sectionId;
   document.getElementById('bm-name').value = bm.name || '';
   document.getElementById('bm-url').value = bm.url || '';
   document.getElementById('bm-img-url').value = '';
@@ -806,11 +947,8 @@ function closeBmModal() {
   clearBmModal();
 }
 
-function closeModalOnOverlay(e, id) {
-  if (e.target === document.getElementById(id)) {
-    document.getElementById(id).classList.remove('open');
-    clearBmModal();
-  }
+function closeModalOnOverlay(e, id, closeFn) {
+  if (e.target === document.getElementById(id)) closeFn();
 }
 
 function clearBmModal() {
@@ -834,9 +972,7 @@ function saveBookmark() {
 
   let img = pendingImgDataUrl || imgUrl || null;
   if (!img) {
-    try {
-      img = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`;
-    } catch(_) {}
+    try { img = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`; } catch(_) {}
   }
 
   const bm = { name, url, img };
@@ -854,12 +990,13 @@ function saveBookmark() {
   }
 
   closeBmModal();
-  render();
+  if (targetSectionId !== activeSection) { activeSection = targetSectionId; renderNav(); }
+  renderGrid();
 }
 
-/* ═══════════════════════════════════════
-   Image preview
-═══════════════════════════════════════ */
+/* ═══════════════════════════
+   Image
+═══════════════════════════ */
 function showImgPreview(src) {
   document.getElementById('img-preview').src = src;
   document.getElementById('img-preview').classList.add('visible');
@@ -870,21 +1007,16 @@ function clearImgPreview() {
   document.getElementById('img-preview').classList.remove('visible');
   document.getElementById('img-placeholder').style.display = 'flex';
 }
-function previewImgUrl(url) {
-  pendingImgDataUrl = null;
-  if (url) showImgPreview(url); else clearImgPreview();
-}
+function previewImgUrl(url) { pendingImgDataUrl = null; if (url) showImgPreview(url); else clearImgPreview(); }
 function previewImgFile(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = e => { pendingImgDataUrl = e.target.result; showImgPreview(pendingImgDataUrl); };
   reader.readAsDataURL(file);
 }
 function autoFetchFavicon() {
   const url = document.getElementById('bm-url').value.trim();
-  const imgUrl = document.getElementById('bm-img-url').value.trim();
-  if (!imgUrl && !pendingImgDataUrl && url) {
+  if (!document.getElementById('bm-img-url').value && !pendingImgDataUrl && url) {
     try { showImgPreview(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`); } catch(_) {}
   }
 }
@@ -894,14 +1026,13 @@ function useFavicon() {
   try {
     const fav = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`;
     document.getElementById('bm-img-url').value = fav;
-    showImgPreview(fav);
-    pendingImgDataUrl = null;
+    showImgPreview(fav); pendingImgDataUrl = null;
   } catch(_) { toast('Invalid URL'); }
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════
    Toast
-═══════════════════════════════════════ */
+═══════════════════════════ */
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -909,10 +1040,11 @@ function toast(msg) {
   setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════
    Init
-═══════════════════════════════════════ */
-render();
+═══════════════════════════ */
+renderNav();
+renderGrid();
 </script>
 </body>
 </html>
