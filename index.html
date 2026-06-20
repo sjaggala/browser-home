@@ -371,30 +371,75 @@
     .badge-music    { background: #fef9c3; color: #a16207; }
     .badge-app      { background: #e0f2fe; color: #0369a1; }
 
-    /* ── Movie/poster card — tall portrait ── */
+    /* ── Movie/poster card — large portrait like a movie poster ── */
     .card-type-movie {
-      width: 90px;
-      height: 140px;
-      padding: 6px 6px 28px;  /* extra bottom for the name */
+      width: 160px;
+      height: 260px;          /* image area */
+      padding: 0;
+      border-radius: 12px;
+      overflow: visible;      /* let name sit below */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
     }
-    .card-type-movie img,
-    .card-type-movie .letter-icon {
-      width: 74px;
-      height: 90px;
-      border-radius: 8px;
+    .card-type-movie .poster-img-wrap {
+      width: 160px;
+      height: 240px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      flex-shrink: 0;
+      background: var(--surface2);
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .card-type-movie:hover .poster-img-wrap {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(134,25,143,0.22);
+      border-color: #c026d3;
+    }
+    .card-type-movie img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
+      border-radius: 0;
+      display: block;
     }
     .card-type-movie .letter-icon {
-      font-size: 2rem;
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      font-size: 3rem;
+      background: var(--accent-light);
     }
+    /* name sits below the poster */
     .card-type-movie .bm-name {
-      position: absolute;
-      bottom: 6px; left: 4px; right: 4px;
-      font-size: 0.62rem;
+      margin-top: 7px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--text);
+      line-height: 1.3;
+      max-width: 160px;
+      word-break: break-word;
+    }
+    /* badge on poster cards */
+    .card-type-movie .type-badge {
+      top: 6px; left: 6px;
+      z-index: 2;
+    }
+    /* delete btn repositioned */
+    .card-type-movie .card-del-btn {
+      top: 6px; right: 6px;
     }
     .card-type-movie:hover {
-      box-shadow: 0 10px 28px rgba(134,25,143,0.2);
-      border-color: #c026d3;
+      transform: none;
+      box-shadow: none;
+      border-color: transparent;
     }
 
     /* ── File card — green tint ── */
@@ -949,14 +994,28 @@ function makeCard(bm, i, sectionId) {
   badge.textContent = meta.badge;
   a.appendChild(badge);
 
-  // Image / icon
-  if (bm.img) {
-    const img = document.createElement('img');
-    img.src = bm.img; img.alt = bm.name;
-    img.onerror = () => img.replaceWith(letterIcon(bm.name, meta.emoji));
-    a.appendChild(img);
+  // Image / icon — movie cards get a wrapper div for the poster effect
+  if (type === 'movie') {
+    const wrap = document.createElement('div');
+    wrap.className = 'poster-img-wrap';
+    if (bm.img) {
+      const img = document.createElement('img');
+      img.src = bm.img; img.alt = bm.name;
+      img.onerror = () => img.replaceWith(letterIcon(bm.name, meta.emoji));
+      wrap.appendChild(img);
+    } else {
+      wrap.appendChild(letterIcon(bm.name, meta.emoji));
+    }
+    a.appendChild(wrap);
   } else {
-    a.appendChild(letterIcon(bm.name, meta.emoji));
+    if (bm.img) {
+      const img = document.createElement('img');
+      img.src = bm.img; img.alt = bm.name;
+      img.onerror = () => img.replaceWith(letterIcon(bm.name, meta.emoji));
+      a.appendChild(img);
+    } else {
+      a.appendChild(letterIcon(bm.name, meta.emoji));
+    }
   }
 
   const span = document.createElement('span');
