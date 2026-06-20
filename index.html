@@ -111,7 +111,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 24px 48px;
+      padding: 18px 24px 48px;  /* top padding gives hover-lift breathing room */
     }
 
     /* legacy — unused */
@@ -135,46 +135,6 @@
       color: var(--text);
       letter-spacing: -0.3px;
     }
-
-    #search-bar {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 40px;
-      box-shadow: var(--shadow);
-      transition: border-color 0.2s, box-shadow 0.2s;
-      overflow: hidden;
-    }
-    #search-bar:focus-within {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
-    }
-
-    #search-input {
-      flex: 1;
-      padding: 11px 20px;
-      background: transparent;
-      border: none;
-      color: var(--text);
-      font-size: 0.95rem;
-      outline: none;
-    }
-    #search-input::placeholder { color: var(--muted); }
-
-    #search-btn {
-      padding: 8px 16px 8px 8px;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 1rem;
-      transition: color 0.15s;
-      display: flex;
-      align-items: center;
-    }
-    #search-btn:hover { color: var(--accent); }
 
     /* ── Section nav — plain text labels ── */
     #section-nav {
@@ -609,6 +569,62 @@
     }
     .field input:focus, .field select:focus { border-color: var(--accent); }
 
+    /* ── Custom type dropdown ── */
+    .custom-select { position: relative; }
+    .cs-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      text-align: left;
+    }
+    .cs-trigger:hover { border-color: var(--accent); }
+    .custom-select.open .cs-trigger { border-color: var(--accent); }
+    .cs-current { display: flex; align-items: center; gap: 9px; }
+    .cs-current svg { color: var(--accent); flex-shrink: 0; }
+    .cs-caret { color: var(--muted); transition: transform 0.18s; flex-shrink: 0; }
+    .custom-select.open .cs-caret { transform: rotate(180deg); }
+
+    .cs-options {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+      padding: 4px;
+      z-index: 10;
+      display: none;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .custom-select.open .cs-options { display: block; }
+    .cs-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: var(--text);
+      transition: background 0.12s;
+    }
+    .cs-option:hover { background: var(--surface2); }
+    .cs-option.selected { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+    .cs-option svg { color: var(--accent); flex-shrink: 0; }
+    .cs-option.selected svg { color: var(--accent); }
+
     #img-preview-wrap { display: flex; align-items: flex-start; gap: 12px; }
     #img-preview {
       width: 50px; height: 50px; border-radius: 10px; object-fit: contain;
@@ -658,20 +674,12 @@
   </div>
 </div>
 
-<!-- Fixed search zone — never shifts regardless of bookmark count -->
+<!-- Fixed header zone — greeting + section tabs, never shifts -->
 <div id="search-zone">
   <div id="search-wrap">
     <div id="search-greeting"></div>
-    <div id="search-bar">
-      <input id="search-input" type="text" placeholder="Search Google…" autocomplete="off" />
-      <button id="search-btn" onclick="doSearch()" title="Search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      </button>
-    </div>
   </div>
-  <!-- Section labels sit just below search, also fixed -->
+  <!-- Section labels -->
   <div id="section-nav"></div>
 </div>
 
@@ -756,14 +764,14 @@
     </div>
     <div class="field">
       <label>Type</label>
-      <select id="bm-type" onchange="onTypeChange()">
-        <option value="webpage">🌐 Webpage — regular website</option>
-        <option value="file">📄 File — local PDF, HTML, or any file path</option>
-        <option value="movie">🎬 Movie / Show / Anime — poster card view</option>
-        <option value="video">▶ Video — YouTube, streaming, clips</option>
-        <option value="music">🎵 Music — Spotify, SoundCloud, podcasts</option>
-        <option value="app">⚡ App — web app or tool</option>
-      </select>
+      <div class="custom-select" id="type-select">
+        <button type="button" class="cs-trigger" onclick="toggleTypeDropdown(event)">
+          <span class="cs-current" id="cs-current"></span>
+          <svg class="cs-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="cs-options" id="cs-options"></div>
+      </div>
+      <input type="hidden" id="bm-type" value="webpage" />
     </div>
     <div class="field">
       <label>URL / Path</label>
@@ -806,6 +814,7 @@ let editMode = false;
 let activeSection = data.sections[0]?.id || null;
 let editingBm = null;
 let pendingImgDataUrl = null;
+let pendingRenameId = null;  // section id to show as an editable input on next render
 
 function loadData() {
   // Try the stable key first
@@ -847,14 +856,6 @@ function tick() {
 }
 tick();
 setInterval(tick, 15000);
-
-/* ── Search ── */
-document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
-function doSearch() {
-  const q = document.getElementById('search-input').value.trim();
-  if (!q) return;
-  window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
-}
 
 /* ── Settings ── */
 function openSettings() {
@@ -903,6 +904,8 @@ function renderNav() {
   const nav = document.getElementById('section-nav');
   nav.innerHTML = '';
 
+  let inputToFocus = null;
+
   data.sections.forEach((sec, idx) => {
     // Separator dot between tabs
     if (idx > 0) {
@@ -911,7 +914,10 @@ function renderNav() {
       nav.appendChild(dot);
     }
 
-    if (editMode) {
+    // Show an editable input when in edit mode OR when this section was just added
+    const showInput = editMode || sec.id === pendingRenameId;
+
+    if (showInput) {
       const wrap = document.createElement('div');
       wrap.className = 'section-tab-edit-wrap';
 
@@ -923,30 +929,43 @@ function renderNav() {
         sec.name = inp.value;
         saveData();
       });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') inp.blur();
+      });
       inp.addEventListener('blur', () => {
         sec.name = inp.value.trim() || 'Untitled';
         inp.value = sec.name;
         saveData();
+        // Once a freshly-added section is named, drop back to normal (read) view
+        if (sec.id === pendingRenameId && !editMode) {
+          pendingRenameId = null;
+        }
         renderNav();
       });
       inp.addEventListener('click', () => {
         if (activeSection !== sec.id) {
           activeSection = sec.id;
-          renderNav();   // re-renders; new input gets focus naturally
+          renderNav();
           renderGrid();
         }
-        // if already active section, do nothing — let the cursor land in the input normally
       });
 
-      const delBtn = document.createElement('button');
-      delBtn.className = 'section-tab-del';
-      delBtn.textContent = '✕';
-      delBtn.title = 'Delete section';
-      delBtn.onclick = () => deleteSection(sec.id);
-
       wrap.appendChild(inp);
-      wrap.appendChild(delBtn);
+
+      // Delete button only in full edit mode
+      if (editMode) {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'section-tab-del';
+        delBtn.textContent = '✕';
+        delBtn.title = 'Delete section';
+        delBtn.onclick = () => deleteSection(sec.id);
+        wrap.appendChild(delBtn);
+      }
+
       nav.appendChild(wrap);
+
+      // Focus the freshly-added section's input
+      if (sec.id === pendingRenameId) inputToFocus = inp;
     } else {
       const tab = document.createElement('button');
       tab.className = 'section-tab' + (sec.id === activeSection ? ' active' : '');
@@ -968,6 +987,11 @@ function renderNav() {
   addTab.textContent = '＋ Section';
   addTab.onclick = addSection;
   nav.appendChild(addTab);
+
+  // Focus & select the freshly-added section's input so the user can type a name right away
+  if (inputToFocus) {
+    setTimeout(() => { inputToFocus.focus(); inputToFocus.select(); }, 0);
+  }
 }
 
 /* ── Grid ── */
@@ -1082,8 +1106,9 @@ function addSection() {
   const sec = { id: uid(), name: 'New Section', bookmarks: [] };
   data.sections.push(sec);
   activeSection = sec.id;
+  pendingRenameId = sec.id;   // show as editable input & focus it immediately
   saveData(); renderNav(); renderGrid();
-  toast('Section added — click Edit to rename it');
+  toast('Type a name for your new section');
 }
 
 function deleteSection(id) {
@@ -1118,9 +1143,16 @@ function openEditBmModal(sectionId, i) {
   editingBm = { sectionId, bmIndex: i };
   document.getElementById('bm-name').value = bm.name || '';
   document.getElementById('bm-url').value = bm.url || '';
-  document.getElementById('bm-type').value = bm.type || 'webpage';
-  document.getElementById('bm-img-url').value = '';
+  setType(bm.type || 'webpage');
   pendingImgDataUrl = null;
+  // Preserve the existing image: uploaded images (data: URLs) are kept in
+  // pendingImgDataUrl; regular image URLs go back into the URL field so they save.
+  if (bm.img && bm.img.startsWith('data:')) {
+    pendingImgDataUrl = bm.img;
+    document.getElementById('bm-img-url').value = '';
+  } else {
+    document.getElementById('bm-img-url').value = bm.img || '';
+  }
   onTypeChange();
   if (bm.img) showImgPreview(bm.img); else clearImgPreview();
   document.getElementById('bm-modal-title').textContent = 'Edit Bookmark';
@@ -1164,6 +1196,56 @@ const TYPE_PLACEHOLDERS = {
   app:     'https://app.example.com',
 };
 
+/* ── Custom type dropdown with professional line icons ── */
+const ICON = {
+  webpage: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  file:    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  movie:   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>',
+  video:   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>',
+  music:   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+  app:     '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+};
+const TYPE_DROPDOWN = [
+  { value: 'webpage', label: 'Webpage' },
+  { value: 'file',    label: 'File' },
+  { value: 'movie',   label: 'Movie' },
+  { value: 'video',   label: 'Video' },
+  { value: 'music',   label: 'Music' },
+  { value: 'app',     label: 'App' },
+];
+
+function renderTypeDropdown() {
+  const box = document.getElementById('cs-options');
+  const current = document.getElementById('bm-type').value;
+  box.innerHTML = '';
+  TYPE_DROPDOWN.forEach(t => {
+    const opt = document.createElement('div');
+    opt.className = 'cs-option' + (t.value === current ? ' selected' : '');
+    opt.innerHTML = ICON[t.value] + '<span>' + t.label + '</span>';
+    opt.onclick = () => { setType(t.value); document.getElementById('type-select').classList.remove('open'); };
+    box.appendChild(opt);
+  });
+}
+
+function setType(value) {
+  document.getElementById('bm-type').value = value;
+  const def = TYPE_DROPDOWN.find(t => t.value === value) || TYPE_DROPDOWN[0];
+  document.getElementById('cs-current').innerHTML = ICON[value] + '<span>' + def.label + '</span>';
+  renderTypeDropdown();
+  onTypeChange();
+}
+
+function toggleTypeDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('type-select').classList.toggle('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  const sel = document.getElementById('type-select');
+  if (sel && !sel.contains(e.target)) sel.classList.remove('open');
+});
+
 function onTypeChange() {
   const type = document.getElementById('bm-type').value;
   const base = data.basepath || '';
@@ -1181,10 +1263,9 @@ function onTypeChange() {
 function clearBmModal() {
   ['bm-name','bm-url','bm-img-url'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('bm-img-file').value = '';
-  document.getElementById('bm-type').value = 'webpage';
   pendingImgDataUrl = null;
   clearImgPreview();
-  onTypeChange();
+  setType('webpage');
 }
 
 function saveBookmark() {
