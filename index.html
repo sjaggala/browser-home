@@ -703,6 +703,12 @@
       <span class="hint">Number of bookmark columns per row</span>
     </div>
 
+    <div class="setting-row">
+      <label>File base path</label>
+      <input id="set-basepath" type="text" placeholder="e.g. file:///C:/Users/you/OneDrive/" oninput="applySettings()" />
+      <span class="hint">When adding a File bookmark, type just the relative part — the base path is prepended automatically.</span>
+    </div>
+
     <hr class="settings-divider" />
     <div class="setting-row">
       <span class="settings-section-label">File Link Mode</span>
@@ -853,6 +859,7 @@ function doSearch() {
 /* ── Settings ── */
 function openSettings() {
   document.getElementById('set-username').value = data.username || '';
+  document.getElementById('set-basepath').value = data.basepath || '';
   document.getElementById('grid-size-input').value = data.cols || 6;
   const hint = document.getElementById('file-mode-hint');
   if (hint) {
@@ -868,6 +875,7 @@ function closeSettings() { document.getElementById('settings-overlay').classList
 function closeSettingsOnOverlay(e) { if (e.target === document.getElementById('settings-overlay')) closeSettings(); }
 function applySettings() {
   data.username = document.getElementById('set-username').value.trim();
+  data.basepath = document.getElementById('set-basepath').value.trim();
   saveData(); tick();
 }
 
@@ -1158,9 +1166,14 @@ const TYPE_PLACEHOLDERS = {
 
 function onTypeChange() {
   const type = document.getElementById('bm-type').value;
-  document.getElementById('bm-url').placeholder = TYPE_PLACEHOLDERS[type] || 'https://example.com';
-  document.getElementById('bm-url-hint').textContent = TYPE_HINTS[type] || '';
-  // Hide favicon option for file type (local files have no favicon)
+  const base = data.basepath || '';
+  if (type === 'file' && base) {
+    document.getElementById('bm-url').placeholder = 'e.g. Course Work/IDS 476/file.html';
+    document.getElementById('bm-url-hint').textContent = `Base path "${base}" will be prepended automatically`;
+  } else {
+    document.getElementById('bm-url').placeholder = TYPE_PLACEHOLDERS[type] || 'https://example.com';
+    document.getElementById('bm-url-hint').textContent = TYPE_HINTS[type] || '';
+  }
   const faviconRow = document.querySelector('.favicon-link');
   if (faviconRow) faviconRow.style.display = type === 'file' ? 'none' : '';
 }
@@ -1188,9 +1201,17 @@ function saveBookmark() {
   if (type !== 'file' && !/^[a-z][a-z\d+\-.]*:\/\//i.test(url)) {
     url = 'https://' + url;
   }
-  // For file type: if it looks like a Windows/Unix path without a scheme, add file:///
-  if (type === 'file' && /^([A-Za-z]:\\|\/[^/])/.test(url)) {
-    url = 'file:///' + url.replace(/\\/g, '/');
+  // For file type: prepend base path if set and url is relative, else handle bare paths
+  if (type === 'file') {
+    const base = (data.basepath || '').trim();
+    if (base && !/^(file:|https?:|[A-Za-z]:\\|\/\/)/.test(url)) {
+      // relative path — join with base
+      const sep = base.endsWith('/') ? '' : '/';
+      url = base + sep + url;
+    } else if (/^([A-Za-z]:\\|\/[^/])/.test(url)) {
+      // bare Windows/Unix path with no scheme
+      url = 'file:///' + url.replace(/\\/g, '/');
+    }
   }
 
   let img = pendingImgDataUrl || imgUrl || null;
