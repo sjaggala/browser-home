@@ -704,6 +704,15 @@
     </div>
 
     <hr class="settings-divider" />
+    <div class="setting-row">
+      <span class="settings-section-label">File Link Mode</span>
+      <span class="hint" id="file-mode-hint"></span>
+      <span class="hint">To open local files directly, set your browser home page to:<br/>
+        <code style="font-size:0.7rem;word-break:break-all;background:var(--surface2);padding:3px 6px;border-radius:4px;display:inline-block;margin-top:4px">file:///C:/Users/srava/OneDrive/Claude%20Directory/browser-home/index.html</code>
+      </span>
+    </div>
+
+    <hr class="settings-divider" />
     <span class="settings-section-label">Backup &amp; Restore</span>
 
     <!-- Auto-backup folder -->
@@ -845,6 +854,14 @@ function doSearch() {
 function openSettings() {
   document.getElementById('set-username').value = data.username || '';
   document.getElementById('grid-size-input').value = data.cols || 6;
+  const hint = document.getElementById('file-mode-hint');
+  if (hint) {
+    const isLocal = location.protocol === 'file:';
+    hint.textContent = isLocal
+      ? '✅ Running locally — file links open directly'
+      : '⚠ Running from GitHub Pages — file links copy to clipboard instead';
+    hint.style.color = isLocal ? '#16a34a' : '#b45309';
+  }
   document.getElementById('settings-overlay').classList.add('open');
 }
 function closeSettings() { document.getElementById('settings-overlay').classList.remove('open'); }
@@ -1032,19 +1049,12 @@ function makeCard(bm, i, sectionId) {
     e.preventDefault();
     if (editMode) { openEditBmModal(sectionId, i); return; }
     if (type === 'file') {
-      // Browsers block file:// from https pages — copy path to clipboard instead
-      navigator.clipboard.writeText(bm.url).then(() => {
-        toast('📋 Path copied — paste it in your address bar to open');
-      }).catch(() => {
-        // Fallback: prompt with the path selected
-        const t = document.createElement('textarea');
-        t.value = bm.url;
-        document.body.appendChild(t);
-        t.select();
-        document.execCommand('copy');
-        document.body.removeChild(t);
-        toast('📋 Path copied — paste it in your address bar to open');
-      });
+      if (location.protocol === 'file:') {
+        window.open(bm.url, '_self');
+      } else {
+        copyToClipboard(bm.url);
+        toast('📋 Path copied! Also: set your home page to the local file for file links to open directly.');
+      }
       return;
     }
     window.open(bm.url, '_blank', 'noopener,noreferrer');
@@ -1241,6 +1251,20 @@ function useFavicon() {
 }
 
 /* ── Toast ── */
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text) {
+  const t = document.createElement('textarea');
+  t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+  document.body.appendChild(t); t.select();
+  document.execCommand('copy'); document.body.removeChild(t);
+}
+
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
