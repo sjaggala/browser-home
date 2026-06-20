@@ -351,6 +351,65 @@
     }
     body.edit-mode .bookmark-card:hover { animation: none; }
 
+    /* ── Type badge ── */
+    .type-badge {
+      position: absolute;
+      top: 5px; left: 5px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      opacity: 0.75;
+      pointer-events: none;
+    }
+    .badge-webpage  { background: #dbeafe; color: #1d4ed8; }
+    .badge-file     { background: #dcfce7; color: #15803d; }
+    .badge-movie    { background: #fae8ff; color: #86198f; }
+    .badge-video    { background: #fee2e2; color: #b91c1c; }
+    .badge-music    { background: #fef9c3; color: #a16207; }
+    .badge-app      { background: #e0f2fe; color: #0369a1; }
+
+    /* ── Movie/poster card — tall portrait ── */
+    .card-type-movie {
+      width: 90px;
+      height: 140px;
+      padding: 6px 6px 28px;  /* extra bottom for the name */
+    }
+    .card-type-movie img,
+    .card-type-movie .letter-icon {
+      width: 74px;
+      height: 90px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    .card-type-movie .letter-icon {
+      font-size: 2rem;
+    }
+    .card-type-movie .bm-name {
+      position: absolute;
+      bottom: 6px; left: 4px; right: 4px;
+      font-size: 0.62rem;
+    }
+    .card-type-movie:hover {
+      box-shadow: 0 10px 28px rgba(134,25,143,0.2);
+      border-color: #c026d3;
+    }
+
+    /* ── File card — green tint ── */
+    .card-type-file { border-color: #bbf7d0; }
+    .card-type-file:hover {
+      box-shadow: 0 8px 20px rgba(21,128,61,0.14);
+      border-color: #16a34a;
+    }
+
+    /* ── Video card — red tint ── */
+    .card-type-video:hover {
+      box-shadow: 0 8px 20px rgba(185,28,28,0.14);
+      border-color: #dc2626;
+    }
+
     /* ── Add placeholder card ── */
     .add-card {
       width: var(--card-size);
@@ -636,8 +695,20 @@
       <input id="bm-name" type="text" placeholder="e.g. GitHub" />
     </div>
     <div class="field">
-      <label>URL</label>
-      <input id="bm-url" type="url" placeholder="https://example.com" oninput="autoFetchFavicon()" />
+      <label>Type</label>
+      <select id="bm-type" onchange="onTypeChange()">
+        <option value="webpage">🌐 Webpage — regular website</option>
+        <option value="file">📄 File — local PDF, HTML, or any file path</option>
+        <option value="movie">🎬 Movie / Show / Anime — poster card view</option>
+        <option value="video">▶ Video — YouTube, streaming, clips</option>
+        <option value="music">🎵 Music — Spotify, SoundCloud, podcasts</option>
+        <option value="app">⚡ App — web app or tool</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>URL / Path</label>
+      <input id="bm-url" type="text" placeholder="https://example.com" oninput="autoFetchFavicon()" />
+      <span id="bm-url-hint" style="font-size:0.72rem;color:var(--muted)"></span>
     </div>
     <div class="field">
       <label>Section</label>
@@ -852,20 +923,40 @@ function renderGrid() {
   saveData();
 }
 
+const TYPE_META = {
+  webpage: { badge: 'Web',   cls: 'badge-webpage', emoji: '🌐' },
+  file:    { badge: 'File',  cls: 'badge-file',    emoji: '📄' },
+  movie:   { badge: 'Movie', cls: 'badge-movie',   emoji: '🎬' },
+  video:   { badge: 'Video', cls: 'badge-video',   emoji: '▶' },
+  music:   { badge: 'Music', cls: 'badge-music',   emoji: '🎵' },
+  app:     { badge: 'App',   cls: 'badge-app',     emoji: '⚡' },
+};
+
 function makeCard(bm, i, sectionId) {
+  const type = bm.type || 'webpage';
+  const meta = TYPE_META[type] || TYPE_META.webpage;
+
   const a = document.createElement('a');
-  a.className = 'bookmark-card';
+  a.className = 'bookmark-card card-type-' + type;
   a.href = bm.url;
-  a.target = '_blank';
+  // File type: open in same tab so local paths / file:// work
+  a.target = type === 'file' ? '_self' : '_blank';
   a.rel = 'noopener noreferrer';
 
+  // Type badge (top-left)
+  const badge = document.createElement('span');
+  badge.className = 'type-badge ' + meta.cls;
+  badge.textContent = meta.badge;
+  a.appendChild(badge);
+
+  // Image / icon
   if (bm.img) {
     const img = document.createElement('img');
     img.src = bm.img; img.alt = bm.name;
-    img.onerror = () => img.replaceWith(letterIcon(bm.name));
+    img.onerror = () => img.replaceWith(letterIcon(bm.name, meta.emoji));
     a.appendChild(img);
   } else {
-    a.appendChild(letterIcon(bm.name));
+    a.appendChild(letterIcon(bm.name, meta.emoji));
   }
 
   const span = document.createElement('span');
@@ -883,10 +974,10 @@ function makeCard(bm, i, sectionId) {
   return a;
 }
 
-function letterIcon(name) {
+function letterIcon(name, emoji) {
   const div = document.createElement('div');
   div.className = 'letter-icon';
-  div.textContent = name ? name[0].toUpperCase() : '?';
+  div.textContent = emoji || (name ? name[0].toUpperCase() : '?');
   return div;
 }
 
@@ -931,8 +1022,10 @@ function openEditBmModal(sectionId, i) {
   editingBm = { sectionId, bmIndex: i };
   document.getElementById('bm-name').value = bm.name || '';
   document.getElementById('bm-url').value = bm.url || '';
+  document.getElementById('bm-type').value = bm.type || 'webpage';
   document.getElementById('bm-img-url').value = '';
   pendingImgDataUrl = null;
+  onTypeChange();
   if (bm.img) showImgPreview(bm.img); else clearImgPreview();
   document.getElementById('bm-modal-title').textContent = 'Edit Bookmark';
   populateSectionSelect(sectionId);
@@ -957,25 +1050,64 @@ function closeBmModal() {
 
 function closeOnOverlay(e, id, fn) { if (e.target === document.getElementById(id)) fn(); }
 
+/* ── Type hints shown below the URL field ── */
+const TYPE_HINTS = {
+  webpage: 'e.g. https://example.com — opens in a new tab',
+  file:    'Paste any path as-is: file:///C:/docs/file.pdf or C:\\folder\\file.html',
+  movie:   'Link to the movie/anime page — displayed as a tall poster card',
+  video:   'e.g. https://youtube.com/watch?v=… — opens in a new tab',
+  music:   'e.g. https://open.spotify.com/… — opens in a new tab',
+  app:     'e.g. https://notion.so — opens in a new tab',
+};
+const TYPE_PLACEHOLDERS = {
+  webpage: 'https://example.com',
+  file:    'file:///C:/Users/you/file.pdf  or  C:\\path\\to\\file',
+  movie:   'https://myanimelist.net/…',
+  video:   'https://youtube.com/watch?v=…',
+  music:   'https://open.spotify.com/…',
+  app:     'https://app.example.com',
+};
+
+function onTypeChange() {
+  const type = document.getElementById('bm-type').value;
+  document.getElementById('bm-url').placeholder = TYPE_PLACEHOLDERS[type] || 'https://example.com';
+  document.getElementById('bm-url-hint').textContent = TYPE_HINTS[type] || '';
+  // Hide favicon option for file type (local files have no favicon)
+  const faviconRow = document.querySelector('.favicon-link');
+  if (faviconRow) faviconRow.style.display = type === 'file' ? 'none' : '';
+}
+
 function clearBmModal() {
   ['bm-name','bm-url','bm-img-url'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('bm-img-file').value = '';
+  document.getElementById('bm-type').value = 'webpage';
   pendingImgDataUrl = null;
   clearImgPreview();
+  onTypeChange();
 }
 
 function saveBookmark() {
   const name = document.getElementById('bm-name').value.trim();
-  let url = document.getElementById('bm-url').value.trim();
+  let url    = document.getElementById('bm-url').value.trim();
+  const type = document.getElementById('bm-type').value;
   const imgUrl = document.getElementById('bm-img-url').value.trim();
   const targetSectionId = document.getElementById('bm-section').value;
 
   if (!name) { toast('Please enter a name'); return; }
-  if (!url)  { toast('Please enter a URL'); return; }
-  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  if (!url)  { toast('Please enter a URL or path'); return; }
+
+  // Only auto-prepend https for non-file types that look like bare domains
+  if (type !== 'file' && !/^[a-z][a-z\d+\-.]*:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
+  // For file type: if it looks like a Windows/Unix path without a scheme, add file:///
+  if (type === 'file' && /^([A-Za-z]:\\|\/[^/])/.test(url)) {
+    url = 'file:///' + url.replace(/\\/g, '/');
+  }
 
   let img = pendingImgDataUrl || imgUrl || null;
-  if (!img) {
+  // Auto-favicon only for web types
+  if (!img && type !== 'file') {
     try { img = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(url).origin)}&sz=64`; } catch(_) {}
   }
 
@@ -983,11 +1115,11 @@ function saveBookmark() {
     const old = data.sections.find(s => s.id === editingBm.sectionId);
     if (old) old.bookmarks.splice(editingBm.bmIndex, 1);
     const nw = data.sections.find(s => s.id === targetSectionId);
-    if (nw) nw.bookmarks.push({ name, url, img });
+    if (nw) nw.bookmarks.push({ name, url, img, type });
     toast('Bookmark updated');
   } else {
     const sec = data.sections.find(s => s.id === targetSectionId);
-    if (sec) sec.bookmarks.push({ name, url, img });
+    if (sec) sec.bookmarks.push({ name, url, img, type });
     toast('Bookmark added');
   }
 
