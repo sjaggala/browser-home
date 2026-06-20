@@ -1058,7 +1058,7 @@ function makeCard(bm, i, sectionId) {
     if (editMode) { openEditBmModal(sectionId, i); return; }
     if (type === 'file') {
       if (location.protocol === 'file:') {
-        window.open(bm.url, '_self');
+        window.open(bm.url, '_blank');
       } else {
         copyToClipboard(bm.url);
         toast('📋 Path copied! Also: set your home page to the local file for file links to open directly.');
