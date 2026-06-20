@@ -983,9 +983,8 @@ function makeCard(bm, i, sectionId) {
 
   const a = document.createElement('a');
   a.className = 'bookmark-card card-type-' + type;
-  a.href = bm.url;
-  // File type: open in same tab so local paths / file:// work
-  a.target = type === 'file' ? '_self' : '_blank';
+  a.href = type === 'file' ? '#' : bm.url;  // file:// blocked from https; handle via click
+  a.target = '_blank';
   a.rel = 'noopener noreferrer';
 
   // Type badge (top-left)
@@ -1029,7 +1028,27 @@ function makeCard(bm, i, sectionId) {
   del.onclick = e => { e.preventDefault(); e.stopPropagation(); deleteBm(sectionId, i); };
   a.appendChild(del);
 
-  a.addEventListener('click', e => { if (editMode) { e.preventDefault(); openEditBmModal(sectionId, i); } });
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    if (editMode) { openEditBmModal(sectionId, i); return; }
+    if (type === 'file') {
+      // Browsers block file:// from https pages — copy path to clipboard instead
+      navigator.clipboard.writeText(bm.url).then(() => {
+        toast('📋 Path copied — paste it in your address bar to open');
+      }).catch(() => {
+        // Fallback: prompt with the path selected
+        const t = document.createElement('textarea');
+        t.value = bm.url;
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand('copy');
+        document.body.removeChild(t);
+        toast('📋 Path copied — paste it in your address bar to open');
+      });
+      return;
+    }
+    window.open(bm.url, '_blank', 'noopener,noreferrer');
+  });
   return a;
 }
 
