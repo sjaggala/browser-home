@@ -36,6 +36,10 @@
   input[data-inp],textarea[data-inp]{transition:border-color .14s,background .14s}
   input[data-inp]:focus,textarea[data-inp]:focus{border-color:rgba(216,162,74,.7)!important;background:rgba(255,255,255,.05)!important}
   [data-secname]:hover{background:rgba(255,255,255,.05)}
+  [data-nav]:hover{background:rgba(255,255,255,.06)!important;color:#EDE9E0!important}
+  [data-nav]{transition:background .14s,color .14s}
+  [data-mv]:hover{background:rgba(216,162,74,.85)!important;color:#1A1815!important}
+  aside::-webkit-scrollbar{width:7px}
   #boot-msg{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#9a9484;text-align:center;padding:90px 20px}
 </style>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -113,21 +117,47 @@ function loadInitial(){
 class App extends React.Component {
   constructor(p){
     super(p);
-    this.state = { sections: loadInitial(), edit:false, query:'', modal:null, hover:null, dragOverSec:null, renaming:null };
+    this.state = { sections: loadInitial(), edit:false, query:'', modal:null, hover:null, dragOverSec:null, activeSec:null, renaming:null };
     this._drag = null;
   }
   componentDidMount(){
     this._kd = (e)=>{ if((e.key==='Control'||e.key==='Meta') && !this.state.edit) this.setState({edit:true}); };
     this._ku = (e)=>{ if(e.key==='Control'||e.key==='Meta') this.setState({edit:false}); };
     this._blur = ()=>{ if(this.state.edit) this.setState({edit:false}); };
+    this._onScroll = ()=>{
+      const secs = this.state.sections; let cur=null;
+      for(const s of secs){ const el=document.getElementById('bm-sec-'+s.id); if(!el) continue; if(el.getBoundingClientRect().top<=140) cur=s.id; }
+      if(!cur && secs.length) cur=secs[0].id;
+      if(cur!==this.state.activeSec) this.setState({activeSec:cur});
+    };
     document.addEventListener('keydown', this._kd);
     document.addEventListener('keyup', this._ku);
     window.addEventListener('blur', this._blur);
+    window.addEventListener('scroll', this._onScroll, {passive:true});
+    setTimeout(this._onScroll, 120);
   }
   componentWillUnmount(){
     document.removeEventListener('keydown', this._kd);
     document.removeEventListener('keyup', this._ku);
     window.removeEventListener('blur', this._blur);
+    window.removeEventListener('scroll', this._onScroll);
+  }
+  scrollToSection(id){
+    const el = document.getElementById('bm-sec-'+id);
+    if(!el) return;
+    const se = document.scrollingElement || document.documentElement;
+    const start = se.scrollTop;
+    const target = Math.max(0, start + el.getBoundingClientRect().top - 84);
+    this.setState({activeSec:id});
+    if(this._raf) cancelAnimationFrame(this._raf);
+    const dur = 380, t0 = performance.now();
+    const step = (now)=>{
+      const p = Math.min(1, (now - t0)/dur);
+      const e = 1 - Math.pow(1-p, 3);
+      se.scrollTop = start + (target - start)*e;
+      if(p < 1) this._raf = requestAnimationFrame(step);
+    };
+    this._raf = requestAnimationFrame(step);
   }
   save(){
     try{ localStorage.setItem(KEY, JSON.stringify(this.state.sections)); }
@@ -163,6 +193,13 @@ class App extends React.Component {
       let i = (toIdx==null) ? to.length : toIdx;
       if(this.sameLoc(fromLoc,toLoc) && fromIdx<i) i--;
       to.splice(i,0,it);
+    });
+  }
+  moveItemBy(loc, idx, dir){
+    this.update(n=>{
+      const c=this.containerOf(n,loc); if(!c) return;
+      const j=idx+dir; if(j<0||j>=c.length) return;
+      const [it]=c.splice(idx,1); c.splice(j,0,it);
     });
   }
   moveItemIntoFolder(fromLoc, fromIdx, sectionId, folderId){
@@ -204,9 +241,38 @@ class App extends React.Component {
               h('kbd',{style:{fontFamily:"'Space Grotesk'",fontSize:'11px',background:'rgba(255,255,255,.07)',border:'1px solid rgba(255,255,255,.12)',borderBottomWidth:'2px',borderRadius:'6px',padding:'2px 7px',color:'#cfc8b8'}},'Ctrl'),' to edit'),
             h('button',{'data-pri':true,onClick:()=>this.addSection(),style:{background:'#D8A24A',color:'#1A1815',border:'none',borderRadius:'10px',padding:'10px 16px',fontWeight:600,fontSize:'13.5px',cursor:'pointer',display:'flex',alignItems:'center',gap:'6px'}},'+ New section'))
         )),
-      h('main',{style:{maxWidth:'1320px',margin:'0 auto',padding:'34px 28px 120px'}}, this.renderBoard()),
+      h('div',{style:{maxWidth:'1320px',margin:'0 auto',padding:'0 28px',display:'flex',gap:'30px',alignItems:'flex-start'}},
+        this.renderSidebar(),
+        h('main',{style:{flex:1,minWidth:0,padding:'34px 0 120px'}}, this.renderBoard())
+      ),
       this.state.edit ? this.renderBanner() : null,
       this.renderModal()
+    );
+  }
+
+  renderSidebar(){
+    const secs = this.state.sections;
+    const edit = this.state.edit;
+    return h('aside',{style:{flex:'none',width:'214px',position:'sticky',top:'88px',maxHeight:'calc(100vh - 108px)',overflowY:'auto',paddingTop:'34px'}},
+      h('div',{style:{fontSize:'11px',fontWeight:700,letterSpacing:'.09em',textTransform:'uppercase',color:C.faint,padding:'0 12px 10px'}},'Sections'),
+      h('div',{style:{display:'flex',flexDirection:'column',gap:'2px'}},
+        secs.length===0 ? h('div',{style:{fontSize:'12.5px',color:C.faint,padding:'6px 12px'}},'No sections yet')
+        : secs.map((s,i)=>{
+          const active = this.state.activeSec===s.id;
+          return h('div',{key:s.id,style:{display:'flex',alignItems:'center',gap:'2px'}},
+            h('button',{'data-nav':true,onClick:()=>this.scrollToSection(s.id),
+              style:{display:'flex',alignItems:'center',gap:'8px',flex:1,minWidth:0,textAlign:'left',background:active?'rgba(216,162,74,.13)':'transparent',border:'none',borderRadius:'9px',padding:'8px 11px',cursor:'pointer',color:active?C.accent:C.muted,fontSize:'13.5px',fontWeight:active?600:500}},
+              h('span',{style:{width:'5px',height:'5px',borderRadius:'50%',background:active?C.accent:'rgba(255,255,255,.18)',flex:'none'}}),
+              h('span',{style:{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, s.title),
+              h('span',{style:{fontSize:'11px',color:C.faint,flex:'none'}}, s.items.length)),
+            edit ? h('span',{style:{display:'flex',flexDirection:'column'}},
+              h('button',{'data-mv':true,disabled:i===0,onClick:()=>this.moveSectionTo(i,i-1),title:'Move up',style:{width:'18px',height:'15px',border:'none',background:'transparent',color:i===0?C.faint:C.muted,cursor:i===0?'default':'pointer',fontSize:'9px',borderRadius:'4px',padding:0,opacity:i===0?.35:1}},'▲'),
+              h('button',{'data-mv':true,disabled:i===secs.length-1,onClick:()=>this.moveSectionTo(i,i+1),title:'Move down',style:{width:'18px',height:'15px',border:'none',background:'transparent',color:i===secs.length-1?C.faint:C.muted,cursor:i===secs.length-1?'default':'pointer',fontSize:'9px',borderRadius:'4px',padding:0,opacity:i===secs.length-1?.35:1}},'▼')
+            ) : null
+          );
+        })
+      ),
+      h('button',{'data-nav':true,onClick:()=>this.addSection(),style:{display:'flex',alignItems:'center',gap:'7px',width:'100%',textAlign:'left',background:'transparent',border:'1px dashed '+C.border,borderRadius:'9px',padding:'8px 12px',cursor:'pointer',color:C.faint,fontSize:'13px',marginTop:'10px'}},'+ New section')
     );
   }
 
@@ -214,7 +280,7 @@ class App extends React.Component {
     return h('div',{key:'bn',style:{position:'fixed',bottom:'22px',left:'50%',transform:'translateX(-50%)',zIndex:60,background:'#2b2620',border:'1px solid '+C.border,borderRadius:'12px',padding:'10px 18px',display:'flex',alignItems:'center',gap:'12px',boxShadow:'0 14px 40px -12px rgba(0,0,0,.7)',animation:'bm-pop .2s ease both',fontSize:'13px'}},
       h('span',{style:{width:'8px',height:'8px',borderRadius:'50%',background:C.accent,boxShadow:'0 0 10px '+C.accent}}),
       h('span',{style:{color:C.text,fontWeight:600}},'Edit mode'),
-      h('span',{style:{color:C.muted}},'Drag to reorder · click a card to edit · ✕ to delete')
+      h('span',{style:{color:C.muted}},'Drag or use ‹ › to reorder cards · click to edit · ✕ to delete')
     );
   }
 
@@ -289,7 +355,7 @@ class App extends React.Component {
       this.addTile(loc)
     );
 
-    return h('section',{key:section.id, style:{animation:'bm-fade .25s ease'}}, header, grid);
+    return h('section',{key:section.id, id:'bm-sec-'+section.id, style:{animation:'bm-fade .25s ease',scrollMarginTop:'84px'}}, header, grid);
   }
 
   iconBtn(glyph,title,onClick,danger){
@@ -308,6 +374,10 @@ class App extends React.Component {
   cardShell(item, loc, idx, inner, opts){
     opts = opts||{};
     const edit = this.state.edit;
+    const cont = this.containerOf(this.state.sections, loc) || [];
+    const atStart = idx<=0, atEnd = idx>=cont.length-1;
+    const mvBtn = (glyph,title,disabled,fn)=> h('button',{'data-mv':true,'data-del':true,disabled,title,onClick:(e)=>{ e.stopPropagation(); if(!disabled) fn(); },
+      style:{width:'22px',height:'22px',borderRadius:'6px',border:'none',background:'rgba(20,18,15,.78)',color:disabled?C.faint:'#EDE9E0',cursor:disabled?'default':'pointer',fontSize:'10px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',opacity:disabled?.4:1}}, glyph);
     return h('div',{key:item.id,'data-card':true,
       draggable: edit,
       onDragStart: edit?(e)=>{ this._drag={kind:'item',loc,index:idx}; e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain','i');}catch(_){} }:null,
@@ -318,6 +388,10 @@ class App extends React.Component {
       style:Object.assign({position:'relative',borderRadius:'14px',border:'1px solid '+C.border,background:opts.bg||C.surface,cursor:'pointer',overflow:'hidden',gridRow:opts.tall?'span 2':'span 1',display:'flex',flexDirection:'column'}, opts.style||{})
     },
       inner,
+      edit ? h('div',{style:{position:'absolute',top:'7px',left:'7px',display:'flex',gap:'3px',zIndex:3}},
+        mvBtn('‹','Move back', atStart, ()=>this.moveItemBy(loc,idx,-1)),
+        mvBtn('›','Move forward', atEnd, ()=>this.moveItemBy(loc,idx,1))
+      ) : null,
       edit ? h('button',{'data-del':true,'data-btn':true,title:'Delete',onClick:(e)=>{ e.stopPropagation(); this.deleteItem(loc,item.id); },
         style:{position:'absolute',top:'7px',right:'7px',width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#e6a0a0',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',zIndex:3}},'✕') : null
     );
