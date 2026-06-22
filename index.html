@@ -10,34 +10,56 @@
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{background:#1A1815;color:#EDE9E0;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  :root{
+    --bg:#1A1815; --surface:rgba(255,255,255,.035); --surface-solid:#242019;
+    --border:rgba(255,255,255,.09); --text:#EDE9E0; --muted:#9a9484; --faint:#6f6a5d;
+    --accent:#D8A24A; --accent-ink:#D8A24A;
+    --chip:rgba(255,255,255,.05); --dash:rgba(255,255,255,.16); --input-bg:rgba(255,255,255,.04);
+    --hover:rgba(255,255,255,.07); --dot:rgba(255,255,255,.18);
+    --header-bg:rgba(26,24,21,.82); --modal-bg:#23201a;
+    --glow:rgba(216,162,74,.06); --card-shadow:rgba(0,0,0,.65);
+    --kbd-bg:rgba(255,255,255,.07); --kbd-border:rgba(255,255,255,.12); --kbd-text:#cfc8b8;
+    --scroll-thumb:#3a342a;
+  }
+  body[data-theme="light"]{
+    --bg:#F3EFE7; --surface:#FFFFFF; --surface-solid:#FFFFFF;
+    --border:rgba(40,30,15,.13); --text:#2C271F; --muted:#6f6757; --faint:#a39b89;
+    --accent:#D8A24A; --accent-ink:#9a6512;
+    --chip:rgba(40,30,15,.05); --dash:rgba(40,30,15,.18); --input-bg:rgba(40,30,15,.04);
+    --hover:rgba(40,30,15,.06); --dot:rgba(40,30,15,.2);
+    --header-bg:rgba(248,245,238,.86); --modal-bg:#FFFFFF;
+    --glow:rgba(216,162,74,.1); --card-shadow:rgba(40,30,15,.16);
+    --kbd-bg:rgba(40,30,15,.06); --kbd-border:rgba(40,30,15,.16); --kbd-text:#6f6757;
+    --scroll-thumb:#cfc6b5;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .25s ease,color .25s ease}
   ::selection{background:#D8A24A;color:#1A1815}
   input,textarea,button,select{font-family:inherit;color:inherit}
   input:focus,textarea:focus{outline:none}
   ::-webkit-scrollbar{width:11px;height:11px}
   ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:#3a342a;border-radius:8px;border:2px solid #1A1815}
-  ::-webkit-scrollbar-thumb:hover{background:#4a4332}
+  ::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:8px;border:2px solid var(--bg)}
+  ::-webkit-scrollbar-thumb:hover{filter:brightness(1.2)}
   @keyframes bm-pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
   @keyframes bm-fade{from{opacity:0}to{opacity:1}}
-  [data-card]{transition:transform .16s cubic-bezier(.2,.7,.3,1),border-color .16s,background .16s,box-shadow .16s}
-  [data-card]:hover{transform:translateY(-3px);border-color:rgba(216,162,74,.55)!important;box-shadow:0 12px 28px -12px rgba(0,0,0,.65)}
+  [data-card]{transition:transform .16s cubic-bezier(.2,.7,.3,1),border-color .16s,box-shadow .16s}
+  [data-card]:hover{transform:translateY(-3px);border-color:rgba(216,162,74,.55)!important;box-shadow:0 12px 28px -12px var(--card-shadow)}
   [data-card]:active{transform:translateY(-1px) scale(.995)}
   [data-add]:hover{border-color:rgba(216,162,74,.6)!important;color:#D8A24A!important;background:rgba(216,162,74,.05)!important}
-  [data-btn]{transition:background .14s,color .14s,border-color .14s,transform .1s}
-  [data-btn]:hover{background:rgba(255,255,255,.08)}
+  [data-btn]{transition:color .14s,border-color .14s,transform .1s}
+  [data-btn]:hover{background:var(--hover)}
   [data-btn]:active{transform:scale(.93)}
   [data-pri]:hover{background:#e6b15c!important}
-  [data-ghost]:hover{background:rgba(255,255,255,.06)}
+  [data-ghost]:hover{background:var(--hover)}
   [data-pick]:hover{border-color:rgba(216,162,74,.55)!important;background:rgba(216,162,74,.06)!important;transform:translateY(-2px)}
   [data-handle]{cursor:grab}
   [data-handle]:active{cursor:grabbing}
   [data-drop-on]{outline:2px dashed rgba(216,162,74,.7);outline-offset:3px}
-  input[data-inp],textarea[data-inp]{transition:border-color .14s,background .14s}
-  input[data-inp]:focus,textarea[data-inp]:focus{border-color:rgba(216,162,74,.7)!important;background:rgba(255,255,255,.05)!important}
-  [data-secname]:hover{background:rgba(255,255,255,.05)}
-  [data-nav]:hover{background:rgba(255,255,255,.06)!important;color:#EDE9E0!important}
-  [data-nav]{transition:background .14s,color .14s}
+  input[data-inp],textarea[data-inp]{transition:border-color .14s}
+  input[data-inp]:focus,textarea[data-inp]:focus{border-color:rgba(216,162,74,.7)!important;background:var(--hover)!important}
+  [data-secname]:hover{background:var(--hover)}
+  [data-nav]:hover{background:var(--hover)!important;color:var(--text)!important}
+  [data-nav]{transition:color .14s}
   [data-mv]:hover{background:rgba(216,162,74,.85)!important;color:#1A1815!important}
   aside::-webkit-scrollbar{width:7px}
   #boot-msg{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#9a9484;text-align:center;padding:90px 20px}
@@ -50,10 +72,13 @@
 
 <script>
 const KEY = 'bm.sections.v3';
+const THEME_KEY = 'bm.theme';
 const C = {
-  bg:'#1A1815', surface:'rgba(255,255,255,.035)', surfaceSolid:'#242019',
-  border:'rgba(255,255,255,.09)', text:'#EDE9E0', muted:'#9a9484', faint:'#6f6a5d',
-  accent:'#D8A24A'
+  bg:'var(--bg)', surface:'var(--surface)', surfaceSolid:'var(--surface-solid)',
+  border:'var(--border)', text:'var(--text)', muted:'var(--muted)', faint:'var(--faint)',
+  accent:'var(--accent)', accentInk:'var(--accent-ink)', onAccent:'#211B12',
+  chip:'var(--chip)', dash:'var(--dash)', inputBg:'var(--input-bg)', surfaceLite:'var(--surface)',
+  dot:'var(--dot)', modalBg:'var(--modal-bg)'
 };
 const CHIP = ['#C26B40','#4079C2','#3F9E72','#9466C2','#C2A340','#C2466A','#3FA9A9'];
 const h = React.createElement;
@@ -117,10 +142,16 @@ function loadInitial(){
 class App extends React.Component {
   constructor(p){
     super(p);
-    this.state = { sections: loadInitial(), edit:false, query:'', modal:null, hover:null, dragOverSec:null, activeSec:null, renaming:null };
+    let theme='dark';
+    try{ const t=localStorage.getItem(THEME_KEY); if(t==='light'||t==='dark') theme=t; }catch(e){}
+    this.state = { sections: loadInitial(), edit:false, query:'', modal:null, hover:null, dragOverSec:null, activeSec:null, theme, renaming:null };
+    try{ document.body.setAttribute('data-theme', theme); }catch(e){}
     this._drag = null;
   }
+  applyTheme(){ try{ document.body.setAttribute('data-theme', this.state.theme); }catch(e){} }
+  toggleTheme(){ const theme = this.state.theme==='dark'?'light':'dark'; this.setState({theme}, ()=>{ this.applyTheme(); try{ localStorage.setItem(THEME_KEY, theme); }catch(e){} }); }
   componentDidMount(){
+    this.applyTheme();
     this._kd = (e)=>{ if((e.key==='Control'||e.key==='Meta') && !this.state.edit) this.setState({edit:true}); };
     this._ku = (e)=>{ if(e.key==='Control'||e.key==='Meta') this.setState({edit:false}); };
     this._blur = ()=>{ if(this.state.edit) this.setState({edit:false}); };
@@ -223,23 +254,26 @@ class App extends React.Component {
   render(){
     const total = this.state.sections.reduce((a,s)=>a+s.items.length,0);
     const countLabel = this.state.sections.length+' sections · '+total+' bookmarks';
-    return h('div',{style:{minHeight:'100vh',background:'radial-gradient(1200px 600px at 80% -10%, rgba(216,162,74,.06), transparent 60%), #1A1815'}},
-      h('header',{style:{position:'sticky',top:0,zIndex:40,backdropFilter:'blur(14px)',WebkitBackdropFilter:'blur(14px)',background:'rgba(26,24,21,.82)',borderBottom:'1px solid rgba(255,255,255,.07)'}},
+    const themeIcon = this.state.theme==='dark' ? '☀' : '☾';
+    return h('div',{style:{minHeight:'100vh',background:'radial-gradient(1200px 600px at 80% -10%, var(--glow), transparent 60%), var(--bg)'}},
+      h('header',{style:{position:'sticky',top:0,zIndex:40,backdropFilter:'blur(14px)',WebkitBackdropFilter:'blur(14px)',background:'var(--header-bg)',borderBottom:'1px solid var(--border)'}},
         h('div',{style:{maxWidth:'1320px',margin:'0 auto',padding:'18px 28px',display:'flex',alignItems:'center',gap:'20px',flexWrap:'wrap'}},
           h('div',{style:{display:'flex',alignItems:'center',gap:'12px',flex:'none'}},
             h('div',{style:{width:'34px',height:'34px',borderRadius:'9px',background:'linear-gradient(140deg,#D8A24A,#b9803a)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Space Grotesk'",fontWeight:700,color:'#1A1815',fontSize:'18px'}},'B'),
             h('div',{},
               h('div',{style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'19px',letterSpacing:'-.01em',lineHeight:1}},'Bookmarks'),
-              h('div',{style:{fontSize:'11.5px',color:'#8a8475',marginTop:'3px'}}, countLabel))),
+              h('div',{style:{fontSize:'11.5px',color:'var(--muted)',marginTop:'3px'}}, countLabel))),
           h('div',{style:{flex:1,minWidth:'200px',display:'flex',justifyContent:'center'}},
             h('div',{style:{position:'relative',width:'100%',maxWidth:'440px'}},
-              h('span',{style:{position:'absolute',left:'14px',top:'50%',transform:'translateY(-50%)',color:'#8a8475',fontSize:'14px'}},'⌕'),
+              h('span',{style:{position:'absolute',left:'14px',top:'50%',transform:'translateY(-50%)',color:'var(--muted)',fontSize:'14px'}},'⌕'),
               h('input',{'data-inp':true,type:'text',placeholder:'Search bookmarks…',onChange:(e)=>this.setState({query:e.target.value}),
-                style:{width:'100%',background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.09)',borderRadius:'11px',padding:'10px 14px 10px 36px',fontSize:'14px',color:'#EDE9E0'}}))),
+                style:{width:'100%',background:'var(--input-bg)',border:'1px solid var(--border)',borderRadius:'11px',padding:'10px 14px 10px 36px',fontSize:'14px',color:'var(--text)'}}))),
           h('div',{style:{flex:'none',display:'flex',alignItems:'center',gap:'12px'}},
-            h('div',{style:{fontSize:'12px',color:'#8a8475',display:'flex',alignItems:'center',gap:'7px'}},'Hold ',
-              h('kbd',{style:{fontFamily:"'Space Grotesk'",fontSize:'11px',background:'rgba(255,255,255,.07)',border:'1px solid rgba(255,255,255,.12)',borderBottomWidth:'2px',borderRadius:'6px',padding:'2px 7px',color:'#cfc8b8'}},'Ctrl'),' to edit'),
-            h('button',{'data-pri':true,onClick:()=>this.addSection(),style:{background:'#D8A24A',color:'#1A1815',border:'none',borderRadius:'10px',padding:'10px 16px',fontWeight:600,fontSize:'13.5px',cursor:'pointer',display:'flex',alignItems:'center',gap:'6px'}},'+ New section'))
+            h('button',{'data-btn':true,onClick:()=>this.toggleTheme(),title:'Toggle light / dark','aria-label':'Toggle theme',
+              style:{width:'38px',height:'38px',borderRadius:'10px',border:'1px solid var(--border)',background:'transparent',color:'var(--muted)',cursor:'pointer',fontSize:'16px',lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center'}}, themeIcon),
+            h('div',{style:{fontSize:'12px',color:'var(--muted)',display:'flex',alignItems:'center',gap:'7px'}},'Hold ',
+              h('kbd',{style:{fontFamily:"'Space Grotesk'",fontSize:'11px',background:'var(--kbd-bg)',border:'1px solid var(--kbd-border)',borderBottomWidth:'2px',borderRadius:'6px',padding:'2px 7px',color:'var(--kbd-text)'}},'Ctrl'),' to edit'),
+            h('button',{'data-pri':true,onClick:()=>this.addSection(),style:{background:'var(--accent)',color:'#211B12',border:'none',borderRadius:'10px',padding:'10px 16px',fontWeight:600,fontSize:'13.5px',cursor:'pointer',display:'flex',alignItems:'center',gap:'6px'}},'+ New section'))
         )),
       h('div',{style:{maxWidth:'1320px',margin:'0 auto',padding:'0 28px',display:'flex',gap:'30px',alignItems:'flex-start'}},
         this.renderSidebar(),
@@ -261,8 +295,8 @@ class App extends React.Component {
           const active = this.state.activeSec===s.id;
           return h('div',{key:s.id,style:{display:'flex',alignItems:'center',gap:'2px'}},
             h('button',{'data-nav':true,onClick:()=>this.scrollToSection(s.id),
-              style:{display:'flex',alignItems:'center',gap:'8px',flex:1,minWidth:0,textAlign:'left',background:active?'rgba(216,162,74,.13)':'transparent',border:'none',borderRadius:'9px',padding:'8px 11px',cursor:'pointer',color:active?C.accent:C.muted,fontSize:'13.5px',fontWeight:active?600:500}},
-              h('span',{style:{width:'5px',height:'5px',borderRadius:'50%',background:active?C.accent:'rgba(255,255,255,.18)',flex:'none'}}),
+              style:{display:'flex',alignItems:'center',gap:'8px',flex:1,minWidth:0,textAlign:'left',background:active?'rgba(216,162,74,.14)':'transparent',border:'none',borderRadius:'9px',padding:'8px 11px',cursor:'pointer',color:active?C.accentInk:C.muted,fontSize:'13.5px',fontWeight:active?600:500}},
+              h('span',{style:{width:'5px',height:'5px',borderRadius:'50%',background:active?C.accent:C.dot,flex:'none'}}),
               h('span',{style:{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, s.title),
               h('span',{style:{fontSize:'11px',color:C.faint,flex:'none'}}, s.items.length)),
             edit ? h('span',{style:{display:'flex',flexDirection:'column'}},
@@ -279,8 +313,8 @@ class App extends React.Component {
   renderBanner(){
     return h('div',{key:'bn',style:{position:'fixed',bottom:'22px',left:'50%',transform:'translateX(-50%)',zIndex:60,background:'#2b2620',border:'1px solid '+C.border,borderRadius:'12px',padding:'10px 18px',display:'flex',alignItems:'center',gap:'12px',boxShadow:'0 14px 40px -12px rgba(0,0,0,.7)',animation:'bm-pop .2s ease both',fontSize:'13px'}},
       h('span',{style:{width:'8px',height:'8px',borderRadius:'50%',background:C.accent,boxShadow:'0 0 10px '+C.accent}}),
-      h('span',{style:{color:C.text,fontWeight:600}},'Edit mode'),
-      h('span',{style:{color:C.muted}},'Drag or use ‹ › to reorder cards · click to edit · ✕ to delete')
+      h('span',{style:{color:'#EDE9E0',fontWeight:600}},'Edit mode'),
+      h('span',{style:{color:'#9a9484'}},'Drag or use ‹ › to reorder cards · click to edit · ✕ to delete')
     );
   }
 
@@ -307,7 +341,7 @@ class App extends React.Component {
       h('div',{style:{fontSize:'40px',marginBottom:'8px',opacity:.6}},'🔖'),
       h('div',{style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'22px',marginBottom:'8px'}},'No sections yet'),
       h('div',{style:{color:C.muted,marginBottom:'22px'}},'Create a section to start grouping your links, shows, files and notes.'),
-      h('button',{'data-pri':true,onClick:()=>this.addSection(),style:{background:C.accent,color:C.bg,border:'none',borderRadius:'10px',padding:'12px 22px',fontWeight:600,fontSize:'14px',cursor:'pointer'}},'+ Create your first section')
+      h('button',{'data-pri':true,onClick:()=>this.addSection(),style:{background:C.accent,color:C.onAccent,border:'none',borderRadius:'10px',padding:'12px 22px',fontWeight:600,fontSize:'14px',cursor:'pointer'}},'+ Create your first section')
     );
   }
 
@@ -332,10 +366,10 @@ class App extends React.Component {
         ? h('input',{autoFocus:true,defaultValue:section.title,'data-inp':true,
             onBlur:(e)=>{ this.renameSection(section.id, e.target.value.trim()||'Untitled'); this.setState({renaming:null}); },
             onKeyDown:(e)=>{ if(e.key==='Enter') e.target.blur(); },
-            style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'21px',background:'rgba(255,255,255,.05)',border:'1px solid '+C.border,borderRadius:'8px',padding:'4px 10px'}})
+            style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'21px',background:C.inputBg,border:'1px solid '+C.border,borderRadius:'8px',padding:'4px 10px'}})
         : h('h2',{'data-secname':edit?true:null,onClick: edit?()=>this.setState({renaming:section.id}):null,
             style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'21px',margin:0,letterSpacing:'-.015em',cursor:edit?'text':'default',padding:'4px 8px',marginLeft:'-8px',borderRadius:'8px'}}, section.title),
-      h('span',{style:{fontSize:'12.5px',color:C.faint,background:'rgba(255,255,255,.04)',borderRadius:'20px',padding:'3px 10px'}}, section.items.length),
+      h('span',{style:{fontSize:'12.5px',color:C.faint,background:C.chip,borderRadius:'20px',padding:'3px 10px'}}, section.items.length),
       h('div',{style:{flex:1}}),
       edit ? h('div',{style:{display:'flex',gap:'4px'}},
         this.iconBtn('▲','Move up', sIdx===0?null:()=>this.moveSectionTo(sIdx,sIdx-1)),
@@ -365,7 +399,7 @@ class App extends React.Component {
 
   addTile(loc){
     return h('button',{key:'add','data-add':true,onClick:()=>this.setState({modal:{type:'pick',loc}}),
-      style:{gridRow:'span 1',borderRadius:'14px',border:'1.5px dashed rgba(255,255,255,.16)',background:'transparent',color:C.faint,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'4px',transition:'all .15s',minHeight:'120px'}},
+      style:{gridRow:'span 1',borderRadius:'14px',border:'1.5px dashed '+C.dash,background:'transparent',color:C.faint,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'4px',transition:'all .15s',minHeight:'120px'}},
       h('span',{style:{fontSize:'22px',lineHeight:1}},'+'),
       h('span',{style:{fontSize:'12px',fontWeight:500}},'Add')
     );
@@ -410,9 +444,9 @@ class App extends React.Component {
     const dom = domainOf(item.url);
     const fav = faviconOf(item.url);
     const inner = h('div',{style:{padding:'15px',display:'flex',flexDirection:'column',height:'100%',gap:'10px'}},
-      h('div',{style:{width:'38px',height:'38px',borderRadius:'10px',background:'rgba(255,255,255,.06)',display:'flex',alignItems:'center',justifyContent:'center',flex:'none',overflow:'hidden'}},
-        fav ? h('img',{src:fav,width:22,height:22,style:{borderRadius:'4px'},onError:(e)=>{ e.target.style.display='none'; e.target.parentNode.textContent=(item.title||'?')[0].toUpperCase(); e.target.parentNode.style.fontWeight='700'; e.target.parentNode.style.color=C.accent; }})
-           : h('span',{style:{fontWeight:700,color:C.accent}}, (item.title||'?')[0].toUpperCase())),
+      h('div',{style:{width:'38px',height:'38px',borderRadius:'10px',background:C.chip,display:'flex',alignItems:'center',justifyContent:'center',flex:'none',overflow:'hidden'}},
+        fav ? h('img',{src:fav,width:22,height:22,style:{borderRadius:'4px'},onError:(e)=>{ e.target.style.display='none'; e.target.parentNode.textContent=(item.title||'?')[0].toUpperCase(); e.target.parentNode.style.fontWeight='700'; e.target.parentNode.style.color='var(--accent-ink)'; }})
+           : h('span',{style:{fontWeight:700,color:C.accentInk}}, (item.title||'?')[0].toUpperCase())),
       h('div',{style:{marginTop:'auto'}},
         h('div',{style:{fontWeight:600,fontSize:'14px',lineHeight:1.25,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}}, item.title||dom||'Untitled'),
         h('div',{style:{fontSize:'11.5px',color:C.faint,marginTop:'3px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, dom||'—'))
@@ -452,7 +486,7 @@ class App extends React.Component {
   noteCard(item, loc, idx){
     const inner = h('div',{style:{padding:'15px',display:'flex',flexDirection:'column',height:'100%',gap:'7px'}},
       h('div',{style:{fontWeight:600,fontSize:'13.5px',display:'flex',alignItems:'center',gap:'6px'}},
-        h('span',{style:{color:C.accent,fontSize:'12px'}},'❝'), item.title||'Note'),
+        h('span',{style:{color:C.accentInk,fontSize:'12px'}},'❝'), item.title||'Note'),
       h('div',{style:{fontSize:'12px',color:C.muted,lineHeight:1.5,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:4,WebkitBoxOrient:'vertical',whiteSpace:'pre-wrap'}}, item.text||'')
     );
     return this.cardShell(item, loc, idx, inner, {bg:'rgba(216,162,74,.07)', style:{border:'1px solid rgba(216,162,74,.22)'}});
@@ -462,14 +496,14 @@ class App extends React.Component {
     const edit = this.state.edit;
     const inner = h('div',{style:{padding:'15px',display:'flex',flexDirection:'column',height:'100%',gap:'10px'}},
       h('div',{style:{width:'42px',height:'34px',position:'relative',flex:'none'}},
-        h('div',{style:{position:'absolute',inset:'4px 0 0 0',background:'rgba(255,255,255,.08)',borderRadius:'6px'}}),
+        h('div',{style:{position:'absolute',inset:'4px 0 0 0',background:C.chip,borderRadius:'6px'}}),
         h('div',{style:{position:'absolute',inset:'0 6px 4px 6px',top:'6px',background:'rgba(216,162,74,.85)',borderRadius:'6px'}}),
         h('div',{style:{position:'absolute',left:0,top:0,width:'18px',height:'9px',background:'rgba(216,162,74,.85)',borderRadius:'5px 5px 0 0'}})),
       h('div',{style:{marginTop:'auto'}},
         h('div',{style:{fontWeight:600,fontSize:'13.5px',lineHeight:1.25}}, item.name||'Folder'),
         h('div',{style:{fontSize:'11px',color:C.faint,marginTop:'3px'}}, (item.items?item.items.length:0)+' items'))
     );
-    return this.cardShell(item, loc, idx, inner, {bg:'rgba(255,255,255,.05)',
+    return this.cardShell(item, loc, idx, inner, {bg:C.surface,
       onDrop: (drag)=>{ if(!this.sameLoc(drag.loc,loc) || drag.index!==idx) this.moveItemIntoFolder(drag.loc, drag.index, loc.sectionId, item.id); }
     });
   }
@@ -492,7 +526,7 @@ class App extends React.Component {
     const wide = m.type==='folder-view';
     return h('div',{key:'overlay',onClick:(e)=>{ if(e.target===e.currentTarget) this.closeModal(); },
       style:{position:'fixed',inset:0,zIndex:80,background:'rgba(10,9,7,.6)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)',display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'8vh 20px 40px',overflowY:'auto',animation:'bm-fade .15s ease'}},
-      h('div',{style:{width:'100%',maxWidth: wide?'920px':'460px',background:'#23201a',border:'1px solid '+C.border,borderRadius:'18px',boxShadow:'0 30px 80px -20px rgba(0,0,0,.8)',animation:'bm-pop .2s cubic-bezier(.2,.7,.3,1) both',overflow:'hidden'}}, body)
+      h('div',{style:{width:'100%',maxWidth: wide?'920px':'460px',background:C.modalBg,border:'1px solid '+C.border,borderRadius:'18px',boxShadow:'0 30px 80px -20px rgba(0,0,0,.8)',animation:'bm-pop .2s cubic-bezier(.2,.7,.3,1) both',overflow:'hidden'}}, body)
     );
   }
 
@@ -508,7 +542,7 @@ class App extends React.Component {
       this.modalHead('Add bookmark'),
       h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px',marginTop:'4px'}},
         opts.map(([k,label,desc,col])=> h('button',{key:k,'data-pick':true,onClick:()=>this.setState({modal:{type:'form',kind:k,loc:m.loc,draft:this.blankDraft(k)}}),
-          style:{textAlign:'left',background:'rgba(255,255,255,.03)',border:'1px solid '+C.border,borderRadius:'12px',padding:'14px',cursor:'pointer',display:'flex',gap:'12px',alignItems:'center',transition:'all .15s'}},
+          style:{textAlign:'left',background:C.chip,border:'1px solid '+C.border,borderRadius:'12px',padding:'14px',cursor:'pointer',display:'flex',gap:'12px',alignItems:'center',transition:'all .15s'}},
           h('span',{style:{width:'30px',height:'30px',borderRadius:'8px',background:col,flex:'none'}}),
           h('span',{},
             h('div',{style:{fontWeight:600,fontSize:'14px'}},label),
@@ -531,7 +565,7 @@ class App extends React.Component {
   }
   inp(val, onChange, ph, type){
     return h('input',{'data-inp':true,type:type||'text',value:val||'',placeholder:ph||'',onChange:(e)=>onChange(e.target.value),
-      style:{width:'100%',background:'rgba(255,255,255,.03)',border:'1px solid '+C.border,borderRadius:'10px',padding:'10px 12px',fontSize:'14px'}});
+      style:{width:'100%',background:C.inputBg,border:'1px solid '+C.border,borderRadius:'10px',padding:'10px 12px',fontSize:'14px'}});
   }
 
   formBody(m){
@@ -552,7 +586,7 @@ class App extends React.Component {
       fields=[
         h('div',{style:{marginBottom:'14px'}},
           h('div',{style:{fontSize:'12px',fontWeight:600,color:C.muted,marginBottom:'6px'}},'File'),
-          h('label',{'data-add':true,style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'6px',border:'1.5px dashed rgba(255,255,255,.18)',borderRadius:'12px',padding:'22px',cursor:'pointer',transition:'all .15s'}},
+          h('label',{'data-add':true,style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'6px',border:'1.5px dashed '+C.dash,borderRadius:'12px',padding:'22px',cursor:'pointer',transition:'all .15s'}},
             h('span',{style:{fontSize:'22px'}},'⬆'),
             h('span',{style:{fontSize:'13px',color:C.muted}}, d.fileName? (d.fileName+'  ·  '+fmtSize(d.size)) : 'Choose a file from your device'),
             h('input',{type:'file',style:{display:'none'},onChange:(e)=>this.onFile(e,m)}))),
@@ -561,7 +595,7 @@ class App extends React.Component {
     } else if(k==='note'){
       fields=[ this.field('Title', this.inp(d.title,(v)=>set({title:v}),'optional')),
         this.field('Text', h('textarea',{'data-inp':true,value:d.text||'',onChange:(e)=>set({text:e.target.value}),placeholder:'Write anything…',
-          style:{width:'100%',minHeight:'120px',resize:'vertical',background:'rgba(255,255,255,.03)',border:'1px solid '+C.border,borderRadius:'10px',padding:'10px 12px',fontSize:'14px',lineHeight:1.5}})) ];
+          style:{width:'100%',minHeight:'120px',resize:'vertical',background:C.inputBg,border:'1px solid '+C.border,borderRadius:'10px',padding:'10px 12px',fontSize:'14px',lineHeight:1.5}})) ];
     } else if(k==='folder'){
       fields=[ this.field('Folder name', this.inp(d.name,(v)=>set({name:v}),'e.g. Articles')) ];
     }
@@ -572,7 +606,7 @@ class App extends React.Component {
       h('div',{style:{display:'flex',gap:'10px',justifyContent:'flex-end',marginTop:'8px'}},
         h('button',{'data-ghost':true,onClick:()=>this.closeModal(),style:{background:'transparent',border:'1px solid '+C.border,color:C.muted,borderRadius:'10px',padding:'10px 18px',fontWeight:600,fontSize:'13.5px',cursor:'pointer'}},'Cancel'),
         h('button',{'data-pri':true,disabled:!canSave,onClick:()=>{ this.saveItem(m.loc, d); this.closeModal(); },
-          style:{background:canSave?C.accent:'rgba(216,162,74,.3)',color:C.bg,border:'none',borderRadius:'10px',padding:'10px 20px',fontWeight:600,fontSize:'13.5px',cursor:canSave?'pointer':'default'}}, isEdit?'Save':'Add'))
+          style:{background:canSave?C.accent:'rgba(216,162,74,.3)',color:C.onAccent,border:'none',borderRadius:'10px',padding:'10px 20px',fontWeight:600,fontSize:'13.5px',cursor:canSave?'pointer':'default'}}, isEdit?'Save':'Add'))
     );
   }
   onFile(e, m){
