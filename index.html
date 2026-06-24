@@ -242,6 +242,16 @@ class App extends React.Component {
       if(f) f.items.push(it); else from.splice(fromIdx,0,it);
     });
   }
+  moveItemOutOfFolder(fromLoc, fromIdx){
+    if(!fromLoc.folderId) return;
+    this.update(n=>{
+      const from=this.containerOf(n,fromLoc); if(!from) return;
+      const it = from[fromIdx]; if(!it) return;
+      from.splice(fromIdx,1);
+      const sec=n.find(s=>s.id===fromLoc.sectionId);
+      if(sec) sec.items.push(it); else from.splice(fromIdx,0,it);
+    });
+  }
 
   openItem(item, loc){
     if(item.type==='link' || item.type==='poster'){ if(item.url) window.open(item.url,'_blank','noopener'); else if(item.type==='poster') this.setState({modal:{type:'form',kind:'poster',loc,draft:{...item}}}); }
@@ -424,7 +434,8 @@ class App extends React.Component {
       inner,
       edit ? h('div',{style:{position:'absolute',top:'7px',left:'7px',display:'flex',gap:'3px',zIndex:3}},
         mvBtn('‹','Move back', atStart, ()=>this.moveItemBy(loc,idx,-1)),
-        mvBtn('›','Move forward', atEnd, ()=>this.moveItemBy(loc,idx,1))
+        mvBtn('›','Move forward', atEnd, ()=>this.moveItemBy(loc,idx,1)),
+        loc.folderId ? mvBtn('⤴','Move out of folder', false, ()=>this.moveItemOutOfFolder(loc,idx)) : null
       ) : null,
       edit ? h('button',{'data-del':true,'data-btn':true,title:'Delete',onClick:(e)=>{ e.stopPropagation(); this.deleteItem(loc,item.id); },
         style:{position:'absolute',top:'7px',right:'7px',width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#e6a0a0',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',zIndex:3}},'✕') : null
@@ -653,6 +664,12 @@ class App extends React.Component {
           h('span',{style:{fontSize:'12px',color:C.faint}}, 'in '+sec.title)),
         h('button',{'data-btn':true,onClick:()=>this.closeModal(),style:{width:'30px',height:'30px',borderRadius:'8px',border:'1px solid '+C.border,background:'transparent',color:C.muted,cursor:'pointer'}},'✕')),
       folder.items.length===0 && !edit ? h('div',{style:{color:C.muted,fontSize:'13px',marginBottom:'14px'}},'This folder is empty. Hold Ctrl and use Add, or drag cards onto the folder.') : null,
+      edit ? h('div',{
+          onDragOver:(e)=>{ if(this._drag&&this._drag.kind==='item'&&this._drag.loc.folderId===m.folderId){ e.preventDefault(); e.currentTarget.setAttribute('data-drop-on',''); } },
+          onDragLeave:(e)=>{ e.currentTarget.removeAttribute('data-drop-on'); },
+          onDrop:(e)=>{ e.currentTarget.removeAttribute('data-drop-on'); if(this._drag&&this._drag.kind==='item'&&this._drag.loc.folderId===m.folderId){ e.preventDefault(); this.moveItemOutOfFolder(this._drag.loc, this._drag.index); this._drag=null; } },
+          style:{marginBottom:'16px',border:'1.5px dashed '+C.dash,borderRadius:'12px',padding:'14px',textAlign:'center',color:C.muted,fontSize:'12.5px'}},
+          '⤴ Drag a card here to move it out of this folder, into '+sec.title) : null,
       grid
     );
   }
