@@ -63,6 +63,9 @@
   [data-nav]:hover{background:var(--hover)!important;color:var(--text)!important}
   [data-nav]{transition:color .14s}
   [data-mv]:hover{background:rgba(216,162,74,.85)!important;color:#1A1815!important}
+  [data-hoveredit]{opacity:0;transition:opacity .14s}
+  [data-card]:hover [data-hoveredit], [data-sechdr]:hover [data-hoveredit]{opacity:1}
+  [data-sidesec].bm-dragover{outline:2px dashed rgba(216,162,74,.7);outline-offset:-2px;border-radius:9px}
   aside::-webkit-scrollbar{width:7px}
   #boot-msg{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#9a9484;text-align:center;padding:90px 20px}
 </style>
@@ -160,25 +163,16 @@ class App extends React.Component {
   closeGroup(){ this.setState({groupOpen:null}); }
   componentDidMount(){
     this.applyTheme();
-    this._kd = (e)=>{ if((e.key==='Control'||e.key==='Meta') && !this.state.edit) this.setState({edit:true}); };
-    this._ku = (e)=>{ if(e.key==='Control'||e.key==='Meta') this.setState({edit:false}); };
-    this._blur = ()=>{ if(this.state.edit) this.setState({edit:false}); };
     this._onScroll = ()=>{
       const secs = this.state.sections; let cur=null;
       for(const s of secs){ const el=document.getElementById('bm-sec-'+s.id); if(!el) continue; if(el.getBoundingClientRect().top<=140) cur=s.id; }
       if(!cur && secs.length) cur=secs[0].id;
       if(cur!==this.state.activeSec) this.setState({activeSec:cur});
     };
-    document.addEventListener('keydown', this._kd);
-    document.addEventListener('keyup', this._ku);
-    window.addEventListener('blur', this._blur);
     window.addEventListener('scroll', this._onScroll, {passive:true});
     setTimeout(this._onScroll, 120);
   }
   componentWillUnmount(){
-    document.removeEventListener('keydown', this._kd);
-    document.removeEventListener('keyup', this._ku);
-    window.removeEventListener('blur', this._blur);
     window.removeEventListener('scroll', this._onScroll);
   }
   scrollToSection(id){
@@ -218,7 +212,13 @@ class App extends React.Component {
   addSection(){ const id=uid(); this.update(n=>{ n.unshift({id, title:'New Section', items:[]}); }); setTimeout(()=>this.setState({renaming:id}), 30); }
   renameSection(id, title){ this.update(n=>{ const s=n.find(x=>x.id===id); if(s) s.title=title; }); }
   deleteSection(id){ if(!confirm('Delete this whole section?')) return; this.update(n=>{ const i=n.findIndex(x=>x.id===id); if(i>=0) n.splice(i,1); }); }
-  moveSectionTo(from,to){ this.update(n=>{ const [s]=n.splice(from,1); let i=to; if(from<to) i--; n.splice(i,0,s); }); }
+  moveSectionTo(from,to){ this.update(n=>{ if(from<0||from>=n.length||to<0||to>=n.length||from===to) return; const [s]=n.splice(from,1); n.splice(to,0,s); }); }
+  reorderSections(fromId,toId){ if(fromId===toId) return; this.update(n=>{ const from=n.findIndex(s=>s.id===fromId); if(from<0) return; const [s]=n.splice(from,1); let to=n.findIndex(x=>x.id===toId); if(to<0){ n.push(s); return; } n.splice(to,0,s); }); }
+  toggleEdit(){ this.setState({edit:!this.state.edit}); }
+  toggleCollapse(id){ this.update(n=>{ const s=n.find(x=>x.id===id); if(s) s.collapsed=!s.collapsed; }); }
+  archiveSection(id, val){ this.update(n=>{ const s=n.find(x=>x.id===id); if(s) s.archived = (val===undefined?true:val); }); }
+  archiveItem(loc, id, val){ this.update(n=>{ const c=this.containerOf(n,loc); if(!c) return; const it=c.find(x=>x.id===id); if(it) it.archived = (val===undefined?true:val); }); }
+  hasArchived(){ return this.state.sections.some(s=> s.archived || s.items.some(it=> it.archived || (it.type==='folder' && it.items && it.items.some(c=>c.archived)))); }
 
   // ---- items ----
   addItem(loc, item){ this.update(n=>{ const c=this.containerOf(n,loc); if(c) c.push(item); }); }
@@ -270,11 +270,16 @@ class App extends React.Component {
 
   // =================== RENDER ===================
   render(){
-    const total = this.state.sections.reduce((a,s)=>a+s.items.length,0);
-    const countLabel = this.state.sections.length+' sections · '+total+' bookmarks';
+    const liveSecs = this.state.sections.filter(s=>!s.archived);
+    const total = liveSecs.reduce((a,s)=>a+s.items.filter(it=>!it.archived).length,0);
+    const countLabel = liveSecs.length+' sections · '+total+' bookmarks';
     const themeIcon = this.state.theme==='dark' ? '☀' : '☾';
     const groups = this.state.viewMode==='groups';
+    const edit = this.state.edit;
     const addButtonLabel = groups ? '+ New group' : '+ New section';
+    const iconBtnStyle = (on)=>({width:'38px',height:'38px',borderRadius:'10px',border:'1px solid '+(on?'transparent':'var(--border)'),background:on?'var(--accent)':'transparent',color:on?'#211B12':'var(--muted)',cursor:'pointer',lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center'});
+    const pencilIcon = h('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'}, h('path',{d:'M12 20h9'}), h('path',{d:'M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z'}));
+    const archiveIcon = h('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'}, h('rect',{x:3,y:4,width:18,height:4,rx:1}), h('path',{d:'M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8'}), h('line',{x1:10,y1:12,x2:14,y2:12}));
     return h('div',{style:{minHeight:'100vh',background:'radial-gradient(1200px 600px at 80% -10%, var(--glow), transparent 60%), var(--bg)'}},
       h('header',{style:{position:'sticky',top:0,zIndex:40,backdropFilter:'blur(14px)',WebkitBackdropFilter:'blur(14px)',background:'var(--header-bg)',borderBottom:'1px solid var(--border)'}},
         h('div',{style:{maxWidth:'1320px',margin:'0 auto',padding:'18px 28px',display:'flex',alignItems:'center',gap:'20px',flexWrap:'wrap'}},
@@ -291,10 +296,14 @@ class App extends React.Component {
               h('input',{'data-inp':true,type:'text',placeholder:'Search bookmarks…',onChange:(e)=>this.setState({query:e.target.value}),
                 style:{width:'100%',background:'var(--input-bg)',border:'1px solid var(--border)',borderRadius:'11px',padding:'10px 14px 10px 36px',fontSize:'14px',color:'var(--text)'}}))),
           h('div',{style:{flex:'none',display:'flex',alignItems:'center',gap:'12px',position:'relative'}},
+            h('button',{'data-btn':true,onClick:()=>this.toggleEdit(),title:edit?'Done editing':'Edit mode','aria-label':'Edit mode',
+              style:iconBtnStyle(edit)}, pencilIcon),
             h('button',{'data-btn':true,onClick:()=>this.setViewMode(groups?'sections':'groups'),title:groups?'Switch to section view':'Switch to group view','aria-label':'Switch view',
-              style:{width:'38px',height:'38px',borderRadius:'10px',border:'1px solid var(--border)',background:'transparent',color:'var(--muted)',cursor:'pointer',lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center'}}, this.renderViewSwitchIcon()),
+              style:iconBtnStyle(false)}, this.renderViewSwitchIcon()),
             h('button',{'data-btn':true,onClick:()=>this.toggleTheme(),title:'Toggle light / dark','aria-label':'Toggle theme',
-              style:{width:'38px',height:'38px',borderRadius:'10px',border:'1px solid var(--border)',background:'transparent',color:'var(--muted)',cursor:'pointer',fontSize:'16px',lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center'}}, themeIcon),
+              style:Object.assign(iconBtnStyle(false),{fontSize:'16px'})}, themeIcon),
+            this.hasArchived() ? h('button',{'data-btn':true,onClick:()=>this.setState({modal:{type:'archive'}}),title:'View archived','aria-label':'Archived',
+              style:iconBtnStyle(false)}, archiveIcon) : null,
             h('button',{'data-pri':true,onClick:()=>this.addSection(),style:{background:'var(--accent)',color:'#211B12',border:'none',borderRadius:'10px',padding:'10px 16px',fontWeight:600,fontSize:'13.5px',cursor:'pointer',display:'flex',alignItems:'center',gap:'6px'}}, addButtonLabel))
         )),
       h('div',{style:{maxWidth:'1320px',margin:'0 auto',padding:'0 28px',display:'flex',gap:'30px',alignItems:'flex-start'}},
@@ -333,7 +342,7 @@ class App extends React.Component {
     const q = this.state.query.trim().toLowerCase();
     const secs = this.state.sections;
     if(secs.length===0) return this.emptyState();
-    const visible = secs.filter(s=> !q || s.title.toLowerCase().includes(q) || s.items.some(it=>this.matches(it,q)));
+    const visible = secs.filter(s=> !s.archived && (!q || s.title.toLowerCase().includes(q) || s.items.some(it=>this.matches(it,q))));
     if(q && visible.length===0) return h('div',{style:{textAlign:'center',padding:'80px 0',color:C.muted}}, 'No groups match “'+this.state.query+'”.');
     return h('div',{style:{paddingTop:'0'}},
       h('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'16px'}},
@@ -361,7 +370,7 @@ class App extends React.Component {
   }
 
   renderGroupCard(section){
-    const items = section.items;
+    const items = section.items.filter(it=>!it.archived);
     const rest = items.slice(3,7);
     const cells = [];
     for(let i=0;i<3;i++){
@@ -385,8 +394,12 @@ class App extends React.Component {
         h('div',{style:{fontWeight:600,fontSize:'14px',lineHeight:1.25,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, section.title),
         h('div',{style:{fontSize:'11.5px',color:C.faint,marginTop:'3px'}}, items.length+' item'+(items.length===1?'':'s'))
       ),
-      this.state.edit ? h('button',{'data-del':true,'data-btn':true,title:'Delete group',onClick:(e)=>{ e.stopPropagation(); this.deleteSection(section.id); },
-        style:{position:'absolute',top:'7px',right:'7px',width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#e6a0a0',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',zIndex:3}},'✕') : null
+      this.state.edit ? h('div',{style:{position:'absolute',top:'7px',right:'7px',display:'flex',gap:'3px',zIndex:3}},
+        h('button',{'data-del':true,'data-btn':true,title:'Archive group',onClick:(e)=>{ e.stopPropagation(); this.archiveSection(section.id); },
+          style:{width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#EDE9E0',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)'}},'⇩'),
+        h('button',{'data-del':true,'data-btn':true,title:'Delete group',onClick:(e)=>{ e.stopPropagation(); this.deleteSection(section.id); },
+          style:{width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#e6a0a0',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)'}},'✕')
+      ) : null
     );
   }
 
@@ -397,7 +410,7 @@ class App extends React.Component {
       h('button',{'data-ghost':true,onClick:()=>this.closeGroup(),style:{marginTop:'14px',background:'transparent',border:'1px solid '+C.border,color:C.muted,borderRadius:'10px',padding:'9px 16px',cursor:'pointer'}},'← Back to groups')
     ); }
     const q = this.state.query.trim().toLowerCase();
-    const items = section.items.filter(it=> !q || this.matches(it,q));
+    const items = section.items.filter(it=> !it.archived && (!q || this.matches(it,q)));
     const loc = {sectionId:section.id};
     const edit = this.state.edit;
     return h('div',{},
@@ -405,7 +418,7 @@ class App extends React.Component {
         h('button',{'data-btn':true,onClick:()=>this.closeGroup(),title:'Back to groups',
           style:{display:'flex',alignItems:'center',gap:'6px',border:'1px solid '+C.border,background:'transparent',color:C.muted,borderRadius:'9px',padding:'8px 13px',cursor:'pointer',fontSize:'13px'}}, '←  Groups'),
         h('h2',{style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'22px',margin:0}}, section.title),
-        h('span',{style:{fontSize:'12.5px',color:C.faint,background:C.chip,borderRadius:'20px',padding:'3px 10px'}}, section.items.length)
+        h('span',{style:{fontSize:'12.5px',color:C.faint,background:C.chip,borderRadius:'20px',padding:'3px 10px'}}, section.items.filter(it=>!it.archived).length)
       ),
       q && items.length===0
         ? h('div',{style:{textAlign:'center',padding:'60px 0',color:C.muted}}, 'No bookmarks match “'+this.state.query+'”.')
@@ -420,24 +433,29 @@ class App extends React.Component {
   }
 
   renderSidebar(){
-    const secs = this.state.sections;
+    const secs = this.state.sections.filter(s=>!s.archived);
     const edit = this.state.edit;
     return h('aside',{style:{flex:'none',width:'214px',position:'sticky',top:'88px',maxHeight:'calc(100vh - 108px)',overflowY:'auto',paddingTop:'34px'}},
-      h('div',{style:{fontSize:'11px',fontWeight:700,letterSpacing:'.09em',textTransform:'uppercase',color:C.faint,padding:'0 12px 10px'}},'Sections'),
+      h('div',{style:{fontSize:'11px',fontWeight:700,letterSpacing:'.09em',textTransform:'uppercase',color:C.faint,padding:'0 12px 10px',display:'flex',alignItems:'center',gap:'6px'}},'Sections',
+        edit ? h('span',{style:{fontWeight:500,letterSpacing:0,textTransform:'none',color:C.faint,fontSize:'10px'}},'· drag to reorder') : null),
       h('div',{style:{display:'flex',flexDirection:'column',gap:'2px'}},
         secs.length===0 ? h('div',{style:{fontSize:'12.5px',color:C.faint,padding:'6px 12px'}},'No sections yet')
-        : secs.map((s,i)=>{
+        : secs.map((s)=>{
           const active = this.state.activeSec===s.id;
-          return h('div',{key:s.id,style:{display:'flex',alignItems:'center',gap:'2px'}},
+          return h('div',{key:s.id,'data-sidesec':true,
+            draggable: edit,
+            onDragStart: edit?(e)=>{ this._drag={kind:'section-side',id:s.id}; e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain','s');}catch(_){} }:null,
+            onDragEnd: edit?(e)=>{ this._drag=null; e.currentTarget.classList.remove('bm-dragover'); }:null,
+            onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='section-side'){ e.preventDefault(); e.currentTarget.classList.add('bm-dragover'); } }:null,
+            onDragLeave: edit?(e)=>{ e.currentTarget.classList.remove('bm-dragover'); }:null,
+            onDrop: edit?(e)=>{ e.currentTarget.classList.remove('bm-dragover'); if(this._drag&&this._drag.kind==='section-side'){ e.preventDefault(); this.reorderSections(this._drag.id, s.id); this._drag=null; } }:null,
+            style:{display:'flex',alignItems:'center',gap:'2px'}},
+            edit ? h('span',{'data-handle':true,title:'Drag to reorder',style:{color:C.faint,fontSize:'13px',lineHeight:1,letterSpacing:'-2px',userSelect:'none',paddingLeft:'4px'}},'⠿') : null,
             h('button',{'data-nav':true,onClick:()=>this.scrollToSection(s.id),
-              style:{display:'flex',alignItems:'center',gap:'8px',flex:1,minWidth:0,textAlign:'left',background:active?'rgba(216,162,74,.14)':'transparent',border:'none',borderRadius:'9px',padding:'8px 11px',cursor:'pointer',color:active?C.accentInk:C.muted,fontSize:'13.5px',fontWeight:active?600:500}},
+              style:{display:'flex',alignItems:'center',gap:'8px',flex:1,minWidth:0,textAlign:'left',background:active?'rgba(216,162,74,.14)':'transparent',border:'none',borderRadius:'9px',padding:'8px 11px',cursor:edit?'grab':'pointer',color:active?C.accentInk:C.muted,fontSize:'13.5px',fontWeight:active?600:500}},
               h('span',{style:{width:'5px',height:'5px',borderRadius:'50%',background:active?C.accent:C.dot,flex:'none'}}),
               h('span',{style:{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, s.title),
-              h('span',{style:{fontSize:'11px',color:C.faint,flex:'none'}}, s.items.length)),
-            edit ? h('span',{style:{display:'flex',flexDirection:'column'}},
-              h('button',{'data-mv':true,disabled:i===0,onClick:()=>this.moveSectionTo(i,i-1),title:'Move up',style:{width:'18px',height:'15px',border:'none',background:'transparent',color:i===0?C.faint:C.muted,cursor:i===0?'default':'pointer',fontSize:'9px',borderRadius:'4px',padding:0,opacity:i===0?.35:1}},'▲'),
-              h('button',{'data-mv':true,disabled:i===secs.length-1,onClick:()=>this.moveSectionTo(i,i+1),title:'Move down',style:{width:'18px',height:'15px',border:'none',background:'transparent',color:i===secs.length-1?C.faint:C.muted,cursor:i===secs.length-1?'default':'pointer',fontSize:'9px',borderRadius:'4px',padding:0,opacity:i===secs.length-1?.35:1}},'▼')
-            ) : null
+              h('span',{style:{fontSize:'11px',color:C.faint,flex:'none'}}, s.items.filter(it=>!it.archived).length))
           );
         })
       ),
@@ -465,7 +483,7 @@ class App extends React.Component {
     const q = this.state.query.trim().toLowerCase();
     const secs = this.state.sections;
     if(secs.length===0) return this.emptyState();
-    const visible = secs.map((s,i)=>({s,i})).filter(({s})=> !q || s.title.toLowerCase().includes(q) || s.items.some(it=>this.matches(it,q)) );
+    const visible = secs.map((s,i)=>({s,i})).filter(({s})=> !s.archived && (!q || s.title.toLowerCase().includes(q) || s.items.some(it=>this.matches(it,q))) );
     if(q && visible.length===0) return h('div',{style:{textAlign:'center',padding:'80px 0',color:C.muted}}, 'No bookmarks match “'+this.state.query+'”.');
     return h('div',{style:{display:'flex',flexDirection:'column',gap:'42px'}},
       visible.map(({s,i})=> this.renderSection(s,i,q)) );
@@ -483,11 +501,15 @@ class App extends React.Component {
   renderSection(section, sIdx, q){
     const edit = this.state.edit;
     const renaming = this.state.renaming===section.id;
-    const items = section.items.filter(it=> !section.title.toLowerCase().includes(q) ? this.matches(it,q) : true);
+    const collapsed = !!section.collapsed;
+    const items = section.items.filter(it=> !it.archived && (!section.title.toLowerCase().includes(q) ? this.matches(it,q) : true));
+    const liveCount = section.items.filter(it=>!it.archived).length;
     const dragHi = this.state.dragOverSec===section.id;
+    const collapseBtn = h('button',{'data-btn':true, key:'col', title: collapsed?'Show section':'Hide section', onClick:(e)=>{ e.stopPropagation(); this.toggleCollapse(section.id); },
+      style:{width:'30px',height:'30px',borderRadius:'8px',border:'1px solid '+C.border,background:'transparent',color:C.muted,cursor:'pointer',fontSize:'13px',display:'flex',alignItems:'center',justifyContent:'center'}}, collapsed?'▸':'▾');
 
-    const header = h('div',{
-        style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'16px',paddingTop:'6px',borderTop: dragHi?'2px solid '+C.accent:'2px solid transparent',transition:'border-color .15s'},
+    const header = h('div',{'data-sechdr':true,
+        style:{display:'flex',alignItems:'center',gap:'10px',marginBottom: collapsed?'0':'16px',paddingTop:'6px',borderTop: dragHi?'2px solid '+C.accent:'2px solid transparent',transition:'border-color .15s'},
         onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='section'){ e.preventDefault(); if(this.state.dragOverSec!==section.id) this.setState({dragOverSec:section.id}); } }:null,
         onDragLeave: edit?()=>{ if(this.state.dragOverSec===section.id) this.setState({dragOverSec:null}); }:null,
         onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='section'){ e.preventDefault(); this.moveSectionTo(this._drag.index, sIdx); this._drag=null; this.setState({dragOverSec:null}); } }:null,
@@ -504,18 +526,22 @@ class App extends React.Component {
             style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'21px',background:C.inputBg,border:'1px solid '+C.border,borderRadius:'8px',padding:'4px 10px'}})
         : h('h2',{'data-secname':edit?true:null,onClick: edit?()=>this.setState({renaming:section.id}):null,
             style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'21px',margin:0,letterSpacing:'-.015em',cursor:edit?'text':'default',padding:'4px 8px',marginLeft:'-8px',borderRadius:'8px'}}, section.title),
-      h('span',{style:{fontSize:'12.5px',color:C.faint,background:C.chip,borderRadius:'20px',padding:'3px 10px'}}, section.items.length),
+      h('span',{style:{fontSize:'12.5px',color:C.faint,background:C.chip,borderRadius:'20px',padding:'3px 10px'}}, liveCount),
       h('div',{style:{flex:1}}),
-      edit ? h('div',{style:{display:'flex',gap:'4px'}},
-        this.iconBtn('▲','Move up', sIdx===0?null:()=>this.moveSectionTo(sIdx,sIdx-1)),
-        this.iconBtn('▼','Move down', sIdx===this.state.sections.length-1?null:()=>this.moveSectionTo(sIdx,sIdx+1)),
+      (!edit && !renaming) ? h('div',{'data-hoveredit':true,style:{display:'flex',gap:'4px'}},
         this.iconBtn('✎','Rename', ()=>this.setState({renaming:section.id})),
+        collapseBtn
+      ) : null,
+      edit ? h('div',{style:{display:'flex',gap:'4px'}},
+        collapseBtn,
+        this.iconBtn('✎','Rename', ()=>this.setState({renaming:section.id})),
+        this.iconBtn('⇩','Archive section', ()=>this.archiveSection(section.id)),
         this.iconBtn('✕','Delete section', ()=>this.deleteSection(section.id), true),
       ) : null
     );
 
     const loc = {sectionId:section.id};
-    const grid = h('div',{
+    const grid = collapsed ? null : h('div',{
         style:{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(174px, 1fr))',gridAutoRows:'120px',gridAutoFlow:'row dense',gap:'18px'},
         onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='item') e.preventDefault(); }:null,
         onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='item'){ e.preventDefault(); this.moveItem(this._drag.loc,this._drag.index, loc, null); this._drag=null; } }:null,
@@ -562,8 +588,14 @@ class App extends React.Component {
         mvBtn('›','Move forward', atEnd, ()=>this.moveItemBy(loc,idx,1)),
         loc.folderId ? mvBtn('⤴','Move out of folder', false, ()=>this.moveItemOutOfFolder(loc,idx)) : null
       ) : null,
-      edit ? h('button',{'data-del':true,'data-btn':true,title:'Delete',onClick:(e)=>{ e.stopPropagation(); this.deleteItem(loc,item.id); },
-        style:{position:'absolute',top:'7px',right:'7px',width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#e6a0a0',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',zIndex:3}},'✕') : null
+      edit ? h('div',{style:{position:'absolute',top:'7px',right:'7px',display:'flex',gap:'3px',zIndex:3}},
+        h('button',{'data-del':true,'data-btn':true,title:'Archive',onClick:(e)=>{ e.stopPropagation(); this.archiveItem(loc,item.id); },
+          style:{width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#EDE9E0',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)'}},'⇩'),
+        h('button',{'data-del':true,'data-btn':true,title:'Delete',onClick:(e)=>{ e.stopPropagation(); this.deleteItem(loc,item.id); },
+          style:{width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#e6a0a0',cursor:'pointer',fontSize:'12px',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)'}},'✕')
+      ) : h('button',{'data-del':true,'data-hoveredit':true,title:'Edit',onClick:(e)=>{ e.stopPropagation(); this.openForm(item, loc); },
+        style:{position:'absolute',top:'7px',right:'7px',width:'24px',height:'24px',borderRadius:'7px',border:'none',background:'rgba(20,18,15,.78)',color:'#EDE9E0',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',zIndex:3},
+        'aria-label':'Edit'}, h('svg',{width:12,height:12,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2.4,strokeLinecap:'round',strokeLinejoin:'round'}, h('path',{d:'M12 20h9'}), h('path',{d:'M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z'})))
     );
   }
 
@@ -659,7 +691,8 @@ class App extends React.Component {
     else if(m.type==='form') body=this.formBody(m);
     else if(m.type==='note-view') body=this.noteViewBody(m);
     else if(m.type==='folder-view') body=this.folderViewBody(m);
-    const wide = m.type==='folder-view';
+    else if(m.type==='archive') body=this.archiveBody(m);
+    const wide = m.type==='folder-view' || m.type==='archive';
     return h('div',{key:'overlay',onClick:(e)=>{ if(e.target===e.currentTarget) this.closeModal(); },
       style:{position:'fixed',inset:0,zIndex:80,background:'rgba(10,9,7,.6)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)',display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'8vh 20px 40px',overflowY:'auto',animation:'bm-fade .15s ease'}},
       h('div',{style:{width:'100%',maxWidth: wide?'920px':'460px',background:C.modalBg,border:'1px solid '+C.border,borderRadius:'18px',boxShadow:'0 30px 80px -20px rgba(0,0,0,.8)',animation:'bm-pop .2s cubic-bezier(.2,.7,.3,1) both',overflow:'hidden'}}, body)
@@ -771,6 +804,48 @@ class App extends React.Component {
     );
   }
 
+  archiveRow(key, title, sub, onRestore, onDelete){
+    const pill = (label,color,fn)=> h('button',{'data-ghost':true,onClick:fn,style:{border:'1px solid '+C.border,background:'transparent',color:color||C.muted,borderRadius:'8px',padding:'6px 12px',fontSize:'12.5px',fontWeight:600,cursor:'pointer',whiteSpace:'nowrap'}}, label);
+    return h('div',{key,style:{display:'flex',alignItems:'center',gap:'10px',padding:'11px 12px',border:'1px solid '+C.border,borderRadius:'11px',background:C.chip}},
+      h('div',{style:{flex:1,minWidth:0}},
+        h('div',{style:{fontWeight:600,fontSize:'13.5px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, title),
+        sub ? h('div',{style:{fontSize:'11.5px',color:C.faint,marginTop:'2px'}}, sub) : null),
+      pill('Restore', C.accentInk, onRestore),
+      pill('Delete', '#d98a8a', onDelete)
+    );
+  }
+
+  archiveBody(m){
+    const secs = this.state.sections;
+    const archSecs = secs.filter(s=>s.archived);
+    const archItems = [];
+    secs.forEach(s=>{
+      if(s.archived) return;
+      s.items.forEach(it=>{
+        if(it.archived) archItems.push({loc:{sectionId:s.id}, item:it, where:s.title});
+        if(it.type==='folder' && it.items) it.items.forEach(c=>{ if(c.archived) archItems.push({loc:{sectionId:s.id,folderId:it.id}, item:c, where:s.title+' / '+(it.name||'Folder')}); });
+      });
+    });
+    const nameOf = (it)=> it.title || it.name || it.fileName || (it.type==='note'?'Note':'Untitled');
+    const empty = archSecs.length===0 && archItems.length===0;
+    return h('div',{style:{padding:'24px'}},
+      this.modalHead('Archived'),
+      empty ? h('div',{style:{color:C.muted,fontSize:'13.5px',padding:'20px 0',textAlign:'center'}},'Nothing archived. In edit mode, use the ⇩ button on any card or section to archive it.') : null,
+      archSecs.length ? h('div',{style:{fontSize:'11px',fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:C.faint,margin:'4px 0 8px'}},'Sections') : null,
+      archSecs.length ? h('div',{style:{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'18px'}},
+        archSecs.map(s=> this.archiveRow('s-'+s.id, s.title, s.items.length+' item'+(s.items.length===1?'':'s'),
+          ()=>this.archiveSection(s.id,false),
+          ()=>this.deleteSection(s.id)))
+      ) : null,
+      archItems.length ? h('div',{style:{fontSize:'11px',fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:C.faint,margin:'4px 0 8px'}},'Bookmarks') : null,
+      archItems.length ? h('div',{style:{display:'flex',flexDirection:'column',gap:'8px'}},
+        archItems.map(a=> this.archiveRow('i-'+a.item.id, nameOf(a.item), a.where+' · '+a.item.type,
+          ()=>this.archiveItem(a.loc, a.item.id, false),
+          ()=>{ this.deleteItem(a.loc, a.item.id); }))
+      ) : null
+    );
+  }
+
   folderViewBody(m){
     const sec = this.state.sections.find(s=>s.id===m.sectionId);
     const folder = sec && sec.items.find(i=>i.id===m.folderId);
@@ -780,7 +855,7 @@ class App extends React.Component {
     const grid = h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(160px, 1fr))',gridAutoRows:'118px',gridAutoFlow:'row dense',gap:'16px'},
         onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='item') e.preventDefault(); }:null,
         onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='item'){ e.preventDefault(); this.moveItem(this._drag.loc,this._drag.index, loc, null); this._drag=null; } }:null },
-      folder.items.map((it,i)=> this.renderCard(it, loc, i)),
+      folder.items.filter(it=>!it.archived).map((it)=> this.renderCard(it, loc, folder.items.indexOf(it))),
       this.addTile(loc)
     );
     return h('div',{style:{padding:'24px'}},
@@ -790,7 +865,7 @@ class App extends React.Component {
           h('div',{style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'19px'}}, folder.name),
           h('span',{style:{fontSize:'12px',color:C.faint}}, 'in '+sec.title)),
         h('button',{'data-btn':true,onClick:()=>this.closeModal(),style:{width:'30px',height:'30px',borderRadius:'8px',border:'1px solid '+C.border,background:'transparent',color:C.muted,cursor:'pointer'}},'✕')),
-      folder.items.length===0 && !edit ? h('div',{style:{color:C.muted,fontSize:'13px',marginBottom:'14px'}},'This folder is empty. Hold Ctrl and use Add, or drag cards onto the folder.') : null,
+      folder.items.filter(it=>!it.archived).length===0 && !edit ? h('div',{style:{color:C.muted,fontSize:'13px',marginBottom:'14px'}},'This folder is empty. Turn on Edit mode to add, or drag cards onto the folder.') : null,
       edit ? h('div',{
           onDragOver:(e)=>{ if(this._drag&&this._drag.kind==='item'&&this._drag.loc.folderId===m.folderId){ e.preventDefault(); e.currentTarget.setAttribute('data-drop-on',''); } },
           onDragLeave:(e)=>{ e.currentTarget.removeAttribute('data-drop-on'); },
