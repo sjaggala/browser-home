@@ -21,7 +21,7 @@
     --header-bg:rgba(26,24,21,.82); --modal-bg:#23201a;
     --glow:rgba(216,162,74,.06); --card-shadow:rgba(0,0,0,.65);
     --kbd-bg:rgba(255,255,255,.07); --kbd-border:rgba(255,255,255,.12); --kbd-text:#cfc8b8;
-    --scroll-thumb:#3a342a;
+    --scroll-thumb:#3a342a; --link:#6aa8ff;
   }
   body[data-theme="light"]{
     --bg:#F3EFE7; --surface:#FFFFFF; --surface-solid:#FFFFFF;
@@ -32,7 +32,7 @@
     --header-bg:rgba(248,245,238,.86); --modal-bg:#FFFFFF;
     --glow:rgba(216,162,74,.1); --card-shadow:rgba(40,30,15,.16);
     --kbd-bg:rgba(40,30,15,.06); --kbd-border:rgba(40,30,15,.16); --kbd-text:#6f6757;
-    --scroll-thumb:#cfc6b5;
+    --scroll-thumb:#cfc6b5; --link:#1a56db;
   }
   body{background:var(--bg);color:var(--text);font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transition:background .25s ease,color .25s ease}
   ::selection{background:#D8A24A;color:#1A1815}
@@ -539,13 +539,14 @@ class App extends React.Component {
     const items = section.items.filter(it=> !it.archived && (!section.title.toLowerCase().includes(q) ? this.matches(it,q) : true));
     const liveCount = section.items.filter(it=>!it.archived).length;
     const dragHi = this.state.dragOverSec===section.id;
-    const collapseBtn = h('button',{'data-btn':true, key:'col', title: collapsed?'Show section':'Hide section', onClick:(e)=>{ e.stopPropagation(); this.toggleCollapse(section.id); },
-      style:{width:'30px',height:'30px',borderRadius:'8px',border:'1px solid '+C.border,background:'transparent',color:C.muted,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}, collapsed?IC.right(16):IC.down(16));
     const layout = section.layout || 'cards';
-    const layoutIcon = layout==='cards'?IC.grid(16): layout==='list'?IC.list(16): IC.link(16);
-    const nextLayout = layout==='cards'?'list': layout==='list'?'links':'cards';
-    const layoutBtn = h('button',{'data-btn':true, key:'lay', title:'Layout: '+layout+' — click for '+nextLayout, onClick:(e)=>{ e.stopPropagation(); this.setLayout(section.id, nextLayout); },
-      style:{width:'30px',height:'30px',borderRadius:'8px',border:'1px solid '+C.border,background:'transparent',color:C.muted,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}, layoutIcon);
+    const layoutGroup = h('div',{key:'lay',style:{display:'flex',gap:'2px',padding:'2px',border:'1px solid '+C.border,borderRadius:'9px',background:C.chip}},
+      [['cards',IC.grid(15),'Cards'],['list',IC.list(15),'List'],['links',IC.link(15),'Links']].map(([k,ic,lbl])=>{
+        const on = layout===k;
+        return h('button',{key:k,'data-btn':true,title:lbl+' layout',onClick:(e)=>{ e.stopPropagation(); this.setLayout(section.id,k); },
+          style:{width:'28px',height:'26px',borderRadius:'7px',border:'none',background:on?C.accent:'transparent',color:on?C.onAccent:C.muted,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}, ic);
+      }));
+    const renameBtn = this.iconBtn(IC.edit(15),'Rename section', ()=>this.setState({renaming:section.id}));
 
     const header = h('div',{'data-sechdr':true,
         style:{display:'flex',alignItems:'center',gap:'10px',marginBottom: collapsed?'0':'16px',paddingTop:'6px',borderTop: dragHi?'2px solid '+C.accent:'2px solid transparent',transition:'border-color .15s'},
@@ -563,17 +564,19 @@ class App extends React.Component {
             onBlur:(e)=>{ this.renameSection(section.id, e.target.value.trim()||'Untitled'); this.setState({renaming:null}); },
             onKeyDown:(e)=>{ if(e.key==='Enter') e.target.blur(); if(e.key==='Escape') this.setState({renaming:null}); },
             style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'21px',background:C.inputBg,border:'1px solid '+C.border,borderRadius:'8px',padding:'4px 10px'}})
-        : h('h2',{'data-secname':true,title:'Click to rename',onClick:()=>this.setState({renaming:section.id}),
-            style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'21px',margin:0,letterSpacing:'-.015em',cursor:'text',padding:'4px 8px',marginLeft:'-8px',borderRadius:'8px'}}, section.title),
+        : h('div',{'data-secname':true,title:collapsed?'Click to expand':'Click to collapse',onClick:()=>this.toggleCollapse(section.id),
+            style:{display:'flex',alignItems:'center',gap:'6px',cursor:'pointer',padding:'4px 8px',marginLeft:'-8px',borderRadius:'8px'}},
+            h('span',{style:{color:C.faint,display:'flex'}}, collapsed?IC.right(18):IC.down(18)),
+            h('h2',{style:{fontFamily:"'Space Grotesk'",fontWeight:600,fontSize:'21px',margin:0,letterSpacing:'-.015em'}}, section.title)),
       h('span',{style:{fontSize:'12.5px',color:C.faint,background:C.chip,borderRadius:'20px',padding:'3px 10px'}}, liveCount),
       h('div',{style:{flex:1}}),
-      (!edit && !renaming) ? h('div',{'data-hoveredit':true,style:{display:'flex',gap:'4px'}},
-        layoutBtn,
-        collapseBtn
+      (!edit && !renaming) ? h('div',{'data-hoveredit':true,style:{display:'flex',gap:'4px',alignItems:'center'}},
+        layoutGroup,
+        renameBtn
       ) : null,
-      edit ? h('div',{style:{display:'flex',gap:'4px'}},
-        layoutBtn,
-        collapseBtn,
+      edit ? h('div',{style:{display:'flex',gap:'4px',alignItems:'center'}},
+        layoutGroup,
+        renameBtn,
         this.iconBtn(IC.archive(15),'Archive section', ()=>this.archiveSection(section.id)),
         this.iconBtn(IC.x(15),'Delete section', ()=>this.deleteSection(section.id), true),
       ) : null
@@ -629,11 +632,11 @@ class App extends React.Component {
     },
       edit ? h('span',{'data-handle':true,style:{color:C.faint,display:'flex',flex:'none'}}, IC.grip(15)) : null,
       links
-        ? h('span',{style:{color:C.accent,display:'flex',flex:'none'}}, IC.link(14))
+        ? h('span',{style:{color:'var(--link)',display:'flex',flex:'none'}}, IC.link(14))
         : h('span',{style:{width:'30px',height:'30px',borderRadius:'8px',background:C.chip,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',flex:'none',color:C.accentInk,fontWeight:700,fontSize:'13px'}},
             fav ? h('img',{src:fav,width:18,height:18,style:{borderRadius:'4px'},onError:(e)=>{ e.target.style.display='none'; e.target.parentNode.textContent=name[0].toUpperCase(); }}) : name[0].toUpperCase()),
       h('span',{'data-linktext': links?true:null,style: links
-          ? {color:C.accentInk,fontSize:'14px',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}
+          ? {color:'var(--link)',fontSize:'14px',fontWeight:500,textDecoration:'underline',textUnderlineOffset:'2px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}
           : {fontSize:'14px',fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}, name),
       (!links && dom) ? h('span',{style:{fontSize:'12px',color:C.faint,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:'none',maxWidth:'40%'}}, dom) : null,
       controls
