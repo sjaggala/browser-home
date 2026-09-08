@@ -66,6 +66,9 @@
   [data-hoveredit]{opacity:0;transition:opacity .14s}
   [data-card]:hover [data-hoveredit], [data-sechdr]:hover [data-hoveredit]{opacity:1}
   [data-sidesec].bm-dragover{outline:2px dashed rgba(216,162,74,.7);outline-offset:-2px;border-radius:9px}
+  [data-listrow]{transition:background .12s,border-color .12s}
+  [data-listrow]:hover{background:var(--hover)!important}
+  [data-linkrow]:hover [data-linktext]{text-decoration:underline}
   aside::-webkit-scrollbar{width:7px}
   #boot-msg{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#9a9484;text-align:center;padding:90px 20px}
 </style>
@@ -101,6 +104,10 @@ const IC = {
   more:(s)=>svgIcon([h('circle',{key:1,cx:12,cy:5,r:1.7}),h('circle',{key:2,cx:12,cy:12,r:1.7}),h('circle',{key:3,cx:12,cy:19,r:1.7})],{size:s||16,fill:1}),
   out:(s)=>svgIcon([h('polyline',{key:1,points:'9 14 4 9 9 4'}),h('path',{key:2,d:'M20 20v-7a4 4 0 0 0-4-4H4'})],{size:s||14}),
   grip:(s)=>svgIcon([[9,6],[15,6],[9,12],[15,12],[9,18],[15,18]].map((p,i)=>h('circle',{key:i,cx:p[0],cy:p[1],r:1.4})),{size:s||16,fill:1}),
+  grid:(s)=>svgIcon([h('rect',{key:1,x:3,y:3,width:7,height:7,rx:1.5}),h('rect',{key:2,x:14,y:3,width:7,height:7,rx:1.5}),h('rect',{key:3,x:3,y:14,width:7,height:7,rx:1.5}),h('rect',{key:4,x:14,y:14,width:7,height:7,rx:1.5})],{size:s||16}),
+  list:(s)=>svgIcon([h('line',{key:1,x1:8,y1:6,x2:21,y2:6}),h('line',{key:2,x1:8,y1:12,x2:21,y2:12}),h('line',{key:3,x1:8,y1:18,x2:21,y2:18}),h('circle',{key:4,cx:3.5,cy:6,r:1.3,fill:'currentColor',stroke:'none'}),h('circle',{key:5,cx:3.5,cy:12,r:1.3,fill:'currentColor',stroke:'none'}),h('circle',{key:6,cx:3.5,cy:18,r:1.3,fill:'currentColor',stroke:'none'})],{size:s||16}),
+  link:(s)=>svgIcon([h('path',{key:1,d:'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'}),h('path',{key:2,d:'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'})],{size:s||16}),
+  plus:(s)=>svgIcon([h('line',{key:1,x1:12,y1:5,x2:12,y2:19}),h('line',{key:2,x1:5,y1:12,x2:19,y2:12})],{size:s||16}),
 };
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
@@ -230,6 +237,7 @@ class App extends React.Component {
   reorderSections(fromId,toId){ if(fromId===toId) return; this.update(n=>{ const from=n.findIndex(s=>s.id===fromId); if(from<0) return; const [s]=n.splice(from,1); let to=n.findIndex(x=>x.id===toId); if(to<0){ n.push(s); return; } n.splice(to,0,s); }); }
   toggleEdit(){ this.setState({edit:!this.state.edit}); }
   toggleCollapse(id){ this.update(n=>{ const s=n.find(x=>x.id===id); if(s) s.collapsed=!s.collapsed; }); }
+  setLayout(id, layout){ this.update(n=>{ const s=n.find(x=>x.id===id); if(s) s.layout=layout; }); }
   archiveSection(id, val){ this.update(n=>{ const s=n.find(x=>x.id===id); if(s) s.archived = (val===undefined?true:val); }); }
   archiveItem(loc, id, val){ this.update(n=>{ const c=this.containerOf(n,loc); if(!c) return; const it=c.find(x=>x.id===id); if(it) it.archived = (val===undefined?true:val); }); }
   hasArchived(){ return this.state.sections.some(s=> s.archived || s.items.some(it=> it.archived || (it.type==='folder' && it.items && it.items.some(c=>c.archived)))); }
@@ -454,13 +462,7 @@ class App extends React.Component {
       ),
       q && items.length===0
         ? h('div',{style:{textAlign:'center',padding:'60px 0',color:C.muted}}, 'No bookmarks match “'+this.state.query+'”.')
-        : h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(174px, 1fr))',gridAutoRows:'120px',gridAutoFlow:'row dense',gap:'18px'},
-            onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='item') e.preventDefault(); }:null,
-            onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='item'){ e.preventDefault(); this.moveItem(this._drag.loc,this._drag.index, loc, null); this._drag=null; } }:null,
-          },
-          items.map((it)=> this.renderCard(it, loc, section.items.indexOf(it))),
-          this.addTile(loc)
-        )
+        : this.renderItems(section, items, loc)
     );
   }
 
@@ -539,6 +541,11 @@ class App extends React.Component {
     const dragHi = this.state.dragOverSec===section.id;
     const collapseBtn = h('button',{'data-btn':true, key:'col', title: collapsed?'Show section':'Hide section', onClick:(e)=>{ e.stopPropagation(); this.toggleCollapse(section.id); },
       style:{width:'30px',height:'30px',borderRadius:'8px',border:'1px solid '+C.border,background:'transparent',color:C.muted,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}, collapsed?IC.right(16):IC.down(16));
+    const layout = section.layout || 'cards';
+    const layoutIcon = layout==='cards'?IC.grid(16): layout==='list'?IC.list(16): IC.link(16);
+    const nextLayout = layout==='cards'?'list': layout==='list'?'links':'cards';
+    const layoutBtn = h('button',{'data-btn':true, key:'lay', title:'Layout: '+layout+' — click for '+nextLayout, onClick:(e)=>{ e.stopPropagation(); this.setLayout(section.id, nextLayout); },
+      style:{width:'30px',height:'30px',borderRadius:'8px',border:'1px solid '+C.border,background:'transparent',color:C.muted,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}, layoutIcon);
 
     const header = h('div',{'data-sechdr':true,
         style:{display:'flex',alignItems:'center',gap:'10px',marginBottom: collapsed?'0':'16px',paddingTop:'6px',borderTop: dragHi?'2px solid '+C.accent:'2px solid transparent',transition:'border-color .15s'},
@@ -561,9 +568,11 @@ class App extends React.Component {
       h('span',{style:{fontSize:'12.5px',color:C.faint,background:C.chip,borderRadius:'20px',padding:'3px 10px'}}, liveCount),
       h('div',{style:{flex:1}}),
       (!edit && !renaming) ? h('div',{'data-hoveredit':true,style:{display:'flex',gap:'4px'}},
+        layoutBtn,
         collapseBtn
       ) : null,
       edit ? h('div',{style:{display:'flex',gap:'4px'}},
+        layoutBtn,
         collapseBtn,
         this.iconBtn(IC.archive(15),'Archive section', ()=>this.archiveSection(section.id)),
         this.iconBtn(IC.x(15),'Delete section', ()=>this.deleteSection(section.id), true),
@@ -571,16 +580,73 @@ class App extends React.Component {
     );
 
     const loc = {sectionId:section.id};
-    const grid = collapsed ? null : h('div',{
-        style:{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(174px, 1fr))',gridAutoRows:'120px',gridAutoFlow:'row dense',gap:'18px'},
-        onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='item') e.preventDefault(); }:null,
-        onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='item'){ e.preventDefault(); this.moveItem(this._drag.loc,this._drag.index, loc, null); this._drag=null; } }:null,
-      },
-      items.map((it)=> this.renderCard(it, loc, section.items.indexOf(it))),
-      this.addTile(loc)
-    );
+    const body = collapsed ? null : this.renderItems(section, items, loc);
 
-    return h('section',{key:section.id, id:'bm-sec-'+section.id, style:{animation:'bm-fade .25s ease',scrollMarginTop:'84px'}}, header, grid);
+    return h('section',{key:section.id, id:'bm-sec-'+section.id, style:{animation:'bm-fade .25s ease',scrollMarginTop:'84px'}}, header, body);
+  }
+
+  renderItems(section, items, loc){
+    const layout = section.layout || 'cards';
+    const edit = this.state.edit;
+    const dropContainer = {
+      onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='item') e.preventDefault(); }:null,
+      onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='item'){ e.preventDefault(); this.moveItem(this._drag.loc,this._drag.index, loc, null); this._drag=null; } }:null,
+    };
+    if(layout==='cards'){
+      return h('div', Object.assign({style:{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(174px, 1fr))',gridAutoRows:'120px',gridAutoFlow:'row dense',gap:'18px'}}, dropContainer),
+        items.map((it)=> this.renderCard(it, loc, section.items.indexOf(it))),
+        this.addTile(loc)
+      );
+    }
+    const links = layout==='links';
+    return h('div', Object.assign({style:{display:'flex',flexDirection:'column',gap: links?'1px':'7px',maxWidth: links?'640px':'780px'}}, dropContainer),
+      items.map((it)=> this.rowItem(it, loc, section.items.indexOf(it), links)),
+      this.addRow(loc, links)
+    );
+  }
+
+  rowItem(item, loc, idx, links){
+    const edit = this.state.edit;
+    const dom = domainOf(item.url);
+    const name = item.title || item.name || item.fileName || (item.type==='note'?'Note':(dom||'Untitled'));
+    const fav = item.type==='link' ? (item.icon||faviconOf(item.url)) : (item.type==='poster'&&item.image?item.image:'');
+    const controls = edit
+      ? h('div',{style:{display:'flex',gap:'4px',marginLeft:'auto',flex:'none'}},
+          this.iconBtn(IC.archive(14),'Archive',()=>this.archiveItem(loc,item.id)),
+          this.iconBtn(IC.x(14),'Delete',()=>this.deleteItem(loc,item.id),true))
+      : h('button',{'data-del':true,'data-hoveredit':true,title:'More options',onClick:(e)=>{ e.stopPropagation(); const r=e.currentTarget.getBoundingClientRect(); this.setState({menu:{item,loc,x:r.right,y:r.bottom+4}}); },
+          style:{marginLeft:'auto',flex:'none',border:'none',background:'transparent',color:C.muted,cursor:'pointer',display:'flex',alignItems:'center',padding:'4px',borderRadius:'6px'}}, IC.more(16));
+    return h('div',{key:item.id,'data-listrow':true,'data-linkrow': links?true:null,
+      draggable: edit,
+      onDragStart: edit?(e)=>{ this._drag={kind:'item',loc,index:idx}; e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain','i');}catch(_){} }:null,
+      onDragEnd: edit?()=>{ this._drag=null; }:null,
+      onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='item') e.preventDefault(); }:null,
+      onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='item'){ e.preventDefault(); e.stopPropagation(); this.moveItem(this._drag.loc,this._drag.index, loc, idx); this._drag=null; } }:null,
+      onClick:(e)=>{ if(e.target.closest('[data-del]')) return; if(edit) this.openForm(item, loc); else this.openItem(item, loc); },
+      style: links
+        ? {display:'flex',alignItems:'center',gap:'10px',padding:'6px 8px',borderRadius:'8px',cursor:'pointer'}
+        : {display:'flex',alignItems:'center',gap:'12px',padding:'9px 12px',border:'1px solid '+C.border,borderRadius:'11px',background:C.surface,cursor:'pointer'}
+    },
+      edit ? h('span',{'data-handle':true,style:{color:C.faint,display:'flex',flex:'none'}}, IC.grip(15)) : null,
+      links
+        ? h('span',{style:{color:C.accent,display:'flex',flex:'none'}}, IC.link(14))
+        : h('span',{style:{width:'30px',height:'30px',borderRadius:'8px',background:C.chip,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',flex:'none',color:C.accentInk,fontWeight:700,fontSize:'13px'}},
+            fav ? h('img',{src:fav,width:18,height:18,style:{borderRadius:'4px'},onError:(e)=>{ e.target.style.display='none'; e.target.parentNode.textContent=name[0].toUpperCase(); }}) : name[0].toUpperCase()),
+      h('span',{'data-linktext': links?true:null,style: links
+          ? {color:C.accentInk,fontSize:'14px',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}
+          : {fontSize:'14px',fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}, name),
+      (!links && dom) ? h('span',{style:{fontSize:'12px',color:C.faint,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:'none',maxWidth:'40%'}}, dom) : null,
+      controls
+    );
+  }
+
+  addRow(loc, links){
+    return h('button',{key:'addrow','data-add':true,onClick:()=>this.setState({modal:{type:'pick',loc}}),
+      style: links
+        ? {display:'flex',alignItems:'center',gap:'7px',border:'none',background:'transparent',color:C.faint,cursor:'pointer',fontSize:'13px',padding:'7px 8px',marginTop:'3px'}
+        : {display:'flex',alignItems:'center',gap:'8px',border:'1.5px dashed '+C.dash,background:'transparent',color:C.faint,cursor:'pointer',fontSize:'13px',padding:'10px 12px',borderRadius:'11px',marginTop:'3px'}},
+      h('span',{style:{display:'flex'}}, IC.plus(15)), links?'Add link':'Add'
+    );
   }
 
   iconBtn(glyph,title,onClick,danger){
