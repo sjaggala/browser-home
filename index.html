@@ -69,6 +69,9 @@
   [data-listrow]{transition:background .12s,border-color .12s}
   [data-listrow]:hover{background:var(--hover)!important}
   [data-linkrow]:hover [data-linktext]{text-decoration:underline}
+  [data-fav]{transition:transform .15s,box-shadow .15s}
+  [data-fav]:hover{transform:translateY(-2px);box-shadow:0 8px 18px -6px rgba(0,0,0,.45)}
+  [data-fav]:hover [data-hoveredit]{opacity:1}
   aside::-webkit-scrollbar{width:7px}
   #boot-msg{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#9a9484;text-align:center;padding:90px 20px}
 </style>
@@ -108,6 +111,7 @@ const IC = {
   list:(s)=>svgIcon([h('line',{key:1,x1:8,y1:6,x2:21,y2:6}),h('line',{key:2,x1:8,y1:12,x2:21,y2:12}),h('line',{key:3,x1:8,y1:18,x2:21,y2:18}),h('circle',{key:4,cx:3.5,cy:6,r:1.3,fill:'currentColor',stroke:'none'}),h('circle',{key:5,cx:3.5,cy:12,r:1.3,fill:'currentColor',stroke:'none'}),h('circle',{key:6,cx:3.5,cy:18,r:1.3,fill:'currentColor',stroke:'none'})],{size:s||16}),
   link:(s)=>svgIcon([h('path',{key:1,d:'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'}),h('path',{key:2,d:'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'})],{size:s||16}),
   plus:(s)=>svgIcon([h('line',{key:1,x1:12,y1:5,x2:12,y2:19}),h('line',{key:2,x1:5,y1:12,x2:19,y2:12})],{size:s||16}),
+  star:(s,o)=>svgIcon(h('polygon',{points:'12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'}),{size:s||16,fill:o&&o.fill}),
 };
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
@@ -241,6 +245,16 @@ class App extends React.Component {
   archiveSection(id, val){ this.update(n=>{ const s=n.find(x=>x.id===id); if(s) s.archived = (val===undefined?true:val); }); }
   archiveItem(loc, id, val){ this.update(n=>{ const c=this.containerOf(n,loc); if(!c) return; const it=c.find(x=>x.id===id); if(it) it.archived = (val===undefined?true:val); }); }
   hasArchived(){ return this.state.sections.some(s=> s.archived || s.items.some(it=> it.archived || (it.type==='folder' && it.items && it.items.some(c=>c.archived)))); }
+  isFavorited(itemId){ const f=this.state.sections.find(s=>s.fav); return !!(f && f.items.some(x=>x.favOf===itemId)); }
+  toggleFavorite(item){ this.update(n=>{
+    let fav=n.find(s=>s.fav);
+    if(fav){ const i=fav.items.findIndex(x=>x.favOf===item.id); if(i>-1){ fav.items.splice(i,1); if(fav.items.length===0) n.splice(n.indexOf(fav),1); return; } }
+    if(!fav){ fav={id:'favorites',fav:true,title:'Favorites',items:[]}; n.unshift(fav); }
+    else if(n.indexOf(fav)>0){ n.splice(n.indexOf(fav),1); n.unshift(fav); }
+    fav.items.push(Object.assign({}, item, {id:uid(), favOf:item.id, archived:false}));
+  }); }
+  removeFavorite(id){ this.update(n=>{ const fav=n.find(s=>s.fav); if(!fav) return; const i=fav.items.findIndex(x=>x.id===id); if(i>-1) fav.items.splice(i,1); if(fav.items.length===0) n.splice(n.indexOf(fav),1); }); }
+  reorderFav(from,to){ this.update(n=>{ const fav=n.find(s=>s.fav); if(!fav) return; if(from<0||to<0||from>=fav.items.length||to>=fav.items.length) return; const [x]=fav.items.splice(from,1); fav.items.splice(to,0,x); }); }
 
   // ---- items ----
   addItem(loc, item){ this.update(n=>{ const c=this.containerOf(n,loc); if(c) c.push(item); }); }
@@ -292,7 +306,7 @@ class App extends React.Component {
 
   // =================== RENDER ===================
   render(){
-    const liveSecs = this.state.sections.filter(s=>!s.archived);
+    const liveSecs = this.state.sections.filter(s=>!s.archived && !s.fav);
     const total = liveSecs.reduce((a,s)=>a+s.items.filter(it=>!it.archived).length,0);
     const countLabel = liveSecs.length+' sections · '+total+' bookmarks';
     const themeIcon = this.state.theme==='dark' ? '☀' : '☾';
@@ -330,7 +344,7 @@ class App extends React.Component {
         )),
       h('div',{style:{maxWidth:'1320px',margin:'0 auto',padding:'0 28px',display:'flex',gap:'30px',alignItems:'flex-start'}},
         groups ? null : this.renderSidebar(),
-        h('main',{style:{flex:1,minWidth:0,padding:'34px 0 120px'}}, groups ? this.renderGroupsArea() : this.renderBoard())
+        h('main',{style:{flex:1,minWidth:0,padding:'34px 0 120px'}}, this.renderFavorites(), groups ? this.renderGroupsArea() : this.renderBoard())
       ),
       this.state.edit ? this.renderBanner() : null,
       this.renderModal(),
@@ -348,6 +362,7 @@ class App extends React.Component {
     return h('div',{key:'cardmenu'},
       h('div',{onClick:()=>this.setState({menu:null}), style:{position:'fixed',inset:0,zIndex:90}}),
       h('div',{onClick:(e)=>e.stopPropagation(), style:{position:'fixed',top:m.y+'px',left:left+'px',width:w+'px',background:C.modalBg,border:'1px solid '+C.border,borderRadius:'12px',padding:'5px',boxShadow:'0 18px 44px -12px rgba(0,0,0,.6)',zIndex:91,animation:'bm-pop .14s ease both'}},
+        m.item.type!=='folder' ? row(IC.star(15,{fill:this.isFavorited(m.item.id)?1:0}), this.isFavorited(m.item.id)?'Unfavorite':'Favorite', ()=>this.toggleFavorite(m.item)) : null,
         row(IC.edit(15),'Edit', ()=>this.openForm(m.item, m.loc)),
         row(IC.archive(15),'Archive', ()=>this.archiveItem(m.loc, m.item.id)),
         row(IC.x(15),'Delete', ()=>this.deleteItem(m.loc, m.item.id), true)
@@ -382,7 +397,7 @@ class App extends React.Component {
     const q = this.state.query.trim().toLowerCase();
     const secs = this.state.sections;
     if(secs.length===0) return this.emptyState();
-    const visible = secs.filter(s=> !s.archived && (!q || s.title.toLowerCase().includes(q) || s.items.some(it=>this.matches(it,q))));
+    const visible = secs.filter(s=> !s.archived && !s.fav && (!q || s.title.toLowerCase().includes(q) || s.items.some(it=>this.matches(it,q))));
     if(q && visible.length===0) return h('div',{style:{textAlign:'center',padding:'80px 0',color:C.muted}}, 'No groups match “'+this.state.query+'”.');
     return h('div',{style:{paddingTop:'0'}},
       h('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'16px'}},
@@ -466,10 +481,49 @@ class App extends React.Component {
     );
   }
 
+  renderFavorites(){
+    const fav = this.state.sections.find(s=>s.fav && !s.archived);
+    if(!fav || !fav.items.length) return null;
+    return h('section',{key:'fav', id:'bm-sec-favorites', style:{marginBottom:'34px',animation:'bm-fade .25s ease',scrollMarginTop:'84px'}},
+      h('div',{style:{display:'flex',alignItems:'center',gap:'7px',marginBottom:'12px'}},
+        h('span',{style:{color:C.accent,display:'flex'}}, IC.star(15,{fill:1})),
+        h('span',{style:{fontFamily:"'Space Grotesk'",fontWeight:700,fontSize:'12px',letterSpacing:'.09em',textTransform:'uppercase',color:C.muted}},'Favorites')),
+      h('div',{style:{display:'flex',flexWrap:'wrap',gap:'10px'}},
+        fav.items.map((f,i)=> this.favTile(f,i))
+      )
+    );
+  }
+
+  favTile(f, idx){
+    const edit = this.state.edit;
+    const dom = domainOf(f.url);
+    const name = f.title || f.name || f.fileName || dom || 'Bookmark';
+    const img = (f.type==='poster' && f.image) ? f.image : (f.icon || faviconOf(f.url));
+    return h('a',{key:f.id,'data-fav':true, href: f.type==='file'?'#':(f.url||'#'), target:'_blank', rel:'noopener noreferrer', title:name,
+      draggable: edit,
+      onDragStart: edit?(e)=>{ this._drag={kind:'fav',index:idx}; e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain','f');}catch(_){} }:null,
+      onDragEnd: edit?()=>{ this._drag=null; }:null,
+      onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='fav') e.preventDefault(); }:null,
+      onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='fav'){ e.preventDefault(); this.reorderFav(this._drag.index, idx); this._drag=null; } }:null,
+      onClick:(e)=>{ e.preventDefault(); if(e.target.closest('[data-del]')) return; this.openItem(f, {sectionId:'favorites'}); },
+      style:{position:'relative',width:'46px',height:'46px',borderRadius:'12px',background:'#fff',border:'1px solid rgba(0,0,0,.12)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 7px -2px rgba(0,0,0,.35)',cursor:'pointer',overflow:'visible',textDecoration:'none'}},
+      img ? h('img',{src:img,width:24,height:24,style:{borderRadius:'5px',objectFit:'contain'},onError:(e)=>{ e.target.style.display='none'; e.target.parentNode.appendChild(document.createTextNode(name[0].toUpperCase())); e.target.parentNode.style.color='#2C271F'; e.target.parentNode.style.fontWeight='700'; }})
+        : h('span',{style:{color:'#2C271F',fontWeight:700}}, name[0].toUpperCase()),
+      h('button',{'data-del':true,'data-hoveredit':true,title:'Remove from favorites',onClick:(e)=>{ e.preventDefault(); e.stopPropagation(); this.removeFavorite(f.id); },
+        style:{position:'absolute',top:'-6px',right:'-6px',width:'18px',height:'18px',borderRadius:'50%',border:'2px solid var(--bg)',background:'#ef4444',color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}, IC.x(10))
+    );
+  }
+
   renderSidebar(){
-    const secs = this.state.sections.filter(s=>!s.archived);
+    const secs = this.state.sections.filter(s=>!s.archived && !s.fav);
+    const favSec = this.state.sections.find(s=>s.fav && s.items.length);
     const edit = this.state.edit;
     return h('aside',{style:{flex:'none',width:'214px',position:'sticky',top:'88px',maxHeight:'calc(100vh - 108px)',overflowY:'auto',paddingTop:'34px'}},
+      favSec ? h('button',{'data-nav':true,onClick:()=>this.scrollToSection('favorites'),
+        style:{display:'flex',alignItems:'center',gap:'8px',width:'100%',textAlign:'left',background:this.state.activeSec==='favorites'?'rgba(216,162,74,.14)':'transparent',border:'none',borderRadius:'9px',padding:'8px 11px',cursor:'pointer',color:this.state.activeSec==='favorites'?C.accentInk:C.muted,fontSize:'13.5px',fontWeight:600,marginBottom:'8px'}},
+        h('span',{style:{color:C.accent,display:'flex',flex:'none'}}, IC.star(14,{fill:1})),
+        h('span',{style:{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},'Favorites'),
+        h('span',{style:{fontSize:'11px',color:C.faint,flex:'none'}}, favSec.items.length)) : null,
       h('div',{style:{fontSize:'11px',fontWeight:700,letterSpacing:'.09em',textTransform:'uppercase',color:C.faint,padding:'0 12px 10px',display:'flex',alignItems:'center',gap:'6px'}},'Sections',
         edit ? h('span',{style:{fontWeight:500,letterSpacing:0,textTransform:'none',color:C.faint,fontSize:'10px'}},'· drag to reorder') : null),
       h('div',{style:{display:'flex',flexDirection:'column',gap:'2px'}},
@@ -517,7 +571,7 @@ class App extends React.Component {
     const q = this.state.query.trim().toLowerCase();
     const secs = this.state.sections;
     if(secs.length===0) return this.emptyState();
-    const visible = secs.map((s,i)=>({s,i})).filter(({s})=> !s.archived && (!q || s.title.toLowerCase().includes(q) || s.items.some(it=>this.matches(it,q))) );
+    const visible = secs.map((s,i)=>({s,i})).filter(({s})=> !s.archived && !s.fav && (!q || s.title.toLowerCase().includes(q) || s.items.some(it=>this.matches(it,q))) );
     if(q && visible.length===0) return h('div',{style:{textAlign:'center',padding:'80px 0',color:C.muted}}, 'No bookmarks match “'+this.state.query+'”.');
     return h('div',{style:{display:'flex',flexDirection:'column',gap:'42px'}},
       visible.map(({s,i})=> this.renderSection(s,i,q)) );
