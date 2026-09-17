@@ -70,7 +70,7 @@
   [data-listrow]:hover{background:var(--hover)!important}
   [data-linkrow]:hover [data-linktext]{text-decoration:underline}
   [data-fav]{transition:transform .15s,box-shadow .15s}
-  [data-fav]:hover{transform:translateY(-2px);box-shadow:0 8px 18px -6px rgba(0,0,0,.45)}
+  [data-fav]:hover{transform:translateY(-2px) scale(1.06)}
   [data-fav]:hover [data-hoveredit]{opacity:1}
   aside::-webkit-scrollbar{width:7px}
   #boot-msg{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#9a9484;text-align:center;padding:90px 20px}
@@ -506,9 +506,9 @@ class App extends React.Component {
       onDragOver: edit?(e)=>{ if(this._drag&&this._drag.kind==='fav') e.preventDefault(); }:null,
       onDrop: edit?(e)=>{ if(this._drag&&this._drag.kind==='fav'){ e.preventDefault(); this.reorderFav(this._drag.index, idx); this._drag=null; } }:null,
       onClick:(e)=>{ e.preventDefault(); if(e.target.closest('[data-del]')) return; this.openItem(f, {sectionId:'favorites'}); },
-      style:{position:'relative',width:'46px',height:'46px',borderRadius:'12px',background:'#fff',border:'1px solid rgba(0,0,0,.12)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 7px -2px rgba(0,0,0,.35)',cursor:'pointer',overflow:'visible',textDecoration:'none'}},
-      img ? h('img',{src:img,width:24,height:24,style:{borderRadius:'5px',objectFit:'contain'},onError:(e)=>{ e.target.style.display='none'; e.target.parentNode.appendChild(document.createTextNode(name[0].toUpperCase())); e.target.parentNode.style.color='#2C271F'; e.target.parentNode.style.fontWeight='700'; }})
-        : h('span',{style:{color:'#2C271F',fontWeight:700}}, name[0].toUpperCase()),
+      style:{position:'relative',width:'46px',height:'46px',borderRadius:'12px',background:'transparent',border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',overflow:'visible',textDecoration:'none'}},
+      img ? h('img',{src:img,width:28,height:28,style:{borderRadius:'6px',objectFit:'contain'},onError:(e)=>{ e.target.style.display='none'; e.target.parentNode.appendChild(document.createTextNode(name[0].toUpperCase())); e.target.parentNode.style.color=C.accentInk; e.target.parentNode.style.fontWeight='700'; }})
+        : h('span',{style:{color:C.accentInk,fontWeight:700}}, name[0].toUpperCase()),
       h('button',{'data-del':true,'data-hoveredit':true,title:'Remove from favorites',onClick:(e)=>{ e.preventDefault(); e.stopPropagation(); this.removeFavorite(f.id); },
         style:{position:'absolute',top:'-6px',right:'-6px',width:'18px',height:'18px',borderRadius:'50%',border:'2px solid var(--bg)',background:'#ef4444',color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}, IC.x(10))
     );
